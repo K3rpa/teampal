@@ -16,3 +16,26 @@ def dashboard(request):
     else:
         return redirect("login.html")  
 
+def cs2(request):
+    if request.user.is_authenticated:
+        return render(request, "cs2.html")
+    else:
+        return redirect("login.html")  
+
+def apex(request):
+    if request.user.is_authenticated:
+        return render(request, "apex.html")
+    else:
+        return redirect("login.html")  
+
+def lol(request):
+    if request.user.is_authenticated:
+        return render(request, "lol.html")
+    else:
+        return redirect("login.html")  
+
+def valorant(request):
+    if request.user.is_authenticated:
+        return render(request, "valorant.html")
+    else:
+        return redirect("login.html")  
