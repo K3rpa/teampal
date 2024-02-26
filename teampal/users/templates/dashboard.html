@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        /* 头像样式 */
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%; /* 将图片设置为圆形 */
+            margin-top: 10px;
+            position: fixed; /* 使用固定定位 */
+            top: 10px; /* 距离顶部10px */
+            right: 10px; /* 距离右侧10px */
+            z-index: 1000; /* 确保头像显示在其他元素之上 */
+            cursor: pointer; /* 添加鼠标指针样式 */
+        }
+
+        /* 表格样式 */
+        .logout-table {
+            display: none; /* 默认隐藏表格 */
+            position: absolute; /* 绝对定位 */
+            top: 70px; /* 距离头像下方70px */
+            right: 0;
+            background-color: #fff; /* 背景颜色为白色 */
+            border: 1px solid #ccc; /* 边框 */
+            padding: 10px;
+        }
+
+        .logout-button {
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the Dashboard, {{ user.username }}!</h1>
+    {% if user.socialaccount_set.exists %}
+        {% with social_account=user.socialaccount_set.first %}
+            {% if social_account.provider == 'google' %}
+                {% if social_account.extra_data.picture %}
+                    <img src="{{ social_account.extra_data.picture }}" alt="Google Avatar" class="avatar" onclick="toggleLogoutTable()">
+                    <table class="logout-table" id="logoutTable">
+                        <tr>
+                            <td><a href="{% url 'logout' %}" class="logout-button">Logout</a></td>
+                        </tr>
+                    </table>
+                {% endif %}
+            {% endif %}
+        {% endwith %}
+    {% endif %}
+
+    <p>This is your dashboard.</p>
+
+    <script>
+        function toggleLogoutTable() {
+            var table = document.getElementById("logoutTable");
+            if (table.style.display === "none") {
+                table.style.display = "block";
+            } else {
+                table.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
+
+
