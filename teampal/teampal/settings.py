@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "users",
     "django.contrib.sites",
-
+    'channels',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -150,5 +150,13 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-ASGI_APPLICATION = "teampal.asgi.application"
 
+ASGI_APPLICATION = "teampal.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
