@@ -1,0 +1,46 @@
+<!-- chat/templates/chat/room.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+</head>
+<body>
+    <h1>Chat Room: {{ room_name }}</h1>
+    <div id="chat-log">
+        <p>聊天消息将显示在这里...</p>
+    </div>
+    <input id="chat-message-input" type="text" size="100" autofocus>
+    <input id="chat-message-submit" type="button" value="发送">
+
+    <script>
+        // 你可以在这里添加 WebSocket 相关的 JavaScript 代码
+        // 例如，建立连接、发送消息、接收消息等
+        var roomName = "{{ room_name }}";
+        var chatSocket = new WebSocket(
+            'ws://' + window.location.host + 
+            '/ws/chat/' + roomName + '/'
+        );
+
+        chatSocket.onmessage = function(e) {
+            var data = JSON.parse(e.data);
+            document.querySelector('#chat-log').innerHTML += ('<p>' + data.message + '</p>');
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            var messageInputDom = document.querySelector('#chat-message-input');
+            var message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInputDom.value = '';
+        };
+
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.key === 'Enter') {  // 如果按下的是Enter键
+                document.querySelector('#chat-message-submit').click();  // 触发发送按钮的点击事件
+            }
+        };
+    </script>
+</body>
+</html>

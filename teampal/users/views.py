@@ -39,3 +39,17 @@ def valorant(request):
         return render(request, "valorant.html")
     else:
         return redirect("login.html")  
+
+def chat(request):
+    if request.user.is_authenticated:
+        return render(request, "chat/chat.html")
+    else:
+        return redirect("login.html")  
+
+def room(request, room_name):
+    if request.user.is_authenticated:
+        return render(request, 'chat/room.html', {
+            'room_name': room_name
+        })
+    else:
+        return redirect("login.html")

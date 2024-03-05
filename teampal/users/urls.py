@@ -9,4 +9,6 @@ urlpatterns = [
     path("apex/", views.apex, name="apex"),
     path("lol/", views.lol, name="lol"),
     path("valorant/", views.valorant, name="valorant"),
+    path("chat/", views.chat, name="chat"),
+    path('chat/<str:room_name>/', views.room, name='room')
 ]
