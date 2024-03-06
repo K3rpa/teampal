@@ -22,14 +22,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         for message_data in last_messages:
             await self.send(text_data=json.dumps({
                 "message": message_data['content'],
-                "author": message_data['author_username'] if message_data['author_username'] else "匿名用户",
+                "author": message_data['author_username'] if message_data['author_username'] else "undefine",
                 "timestamp": message_data['timestamp']
             }))
 
     async def get_last_messages(self, room_name):
         @database_sync_to_async
         def get_messages():
-            # 这里改为按时间戳递增排序
             messages = Message.objects.filter(room_name=room_name).order_by('timestamp')[:10]
             return [{
                 'content': message.content,
@@ -48,7 +47,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Get user information
         user = self.scope['user']
-        username = user.username if user.is_authenticated else "匿名用户"
+        username = user.username if user.is_authenticated else "undefine"
 
         # Save message to database
         await self.save_message(user, message, self.room_name)
@@ -65,7 +64,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         message = event["message"]
-        author = event.get("author", "匿名用户")
+        author = event.get("author", "undefine")
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({

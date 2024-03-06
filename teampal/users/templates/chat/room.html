@@ -6,9 +6,11 @@
     <title>Chat Room: {{ room_name }}</title>
 </head>
 <body>
+    <a href="{% url 'friend_list' %}" style="margin-bottom: 20px; display: inline-block;">&laquo; Return to Friend List</a>
+
     <h1>Chat Room: {{ room_name }}</h1>
     <div id="chat-log">
-        <p>聊天消息将显示在这里...</p>
+        <p>Chat start here...</p>
     </div>
     <input id="chat-message-input" type="text" size="100" autofocus>
     <input id="chat-message-submit" type="button" value="发送">
@@ -22,17 +24,15 @@
 
         chatSocket.onmessage = function(e) {
             var data = JSON.parse(e.data);
-            // 检查数据中是否包含作者信息，如果不包含则默认显示为"匿名用户"
-            var author = data.author || "匿名用户";
+            var author = data.author || "undefine";
             var message = data.message;
-            var timestamp = data.timestamp || new Date().toISOString(); // 如果没有时间戳则使用当前时间
+            var timestamp = data.timestamp || new Date().toISOString();
             document.querySelector('#chat-log').innerHTML += ('<p><b>' + author + '</b>: ' + message + ' <i>(' + timestamp + ')</i></p>');
         };
 
         document.querySelector('#chat-message-submit').onclick = function(e) {
             var messageInputDom = document.querySelector('#chat-message-input');
             var message = messageInputDom.value;
-            // 发送消息时，不需要在客户端指定作者，因为这应该由服务器处理
             chatSocket.send(JSON.stringify({
                 'message': message
             }));

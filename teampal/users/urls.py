@@ -10,5 +10,12 @@ urlpatterns = [
     path("lol/", views.lol, name="lol"),
     path("valorant/", views.valorant, name="valorant"),
     path("chat/", views.chat, name="chat"),
-    path('chat/<str:room_name>/', views.room, name='room')
+    path('chat/<str:room_name>/', views.room, name='room'),
+    path('friend_list/', views.friend_list, name='friend_list'),
+    path('add_friend/<str:username>/', views.add_friend, name='add_friend'),
+    path('remove_friend/<str:username>/', views.remove_friend, name='remove_friend'),
+    path('search_user/', views.search_user, name='search_user'),
+    path('start_private_chat/<str:friend_username>/', views.start_private_chat, name='start_private_chat'),
+
+
 ]
