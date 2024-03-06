@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>Chat Room</title>
+    <title>Chat Room: {{ room_name }}</title>
 </head>
 <body>
     <h1>Chat Room: {{ room_name }}</h1>
@@ -14,8 +14,6 @@
     <input id="chat-message-submit" type="button" value="发送">
 
     <script>
-        // 你可以在这里添加 WebSocket 相关的 JavaScript 代码
-        // 例如，建立连接、发送消息、接收消息等
         var roomName = "{{ room_name }}";
         var chatSocket = new WebSocket(
             'ws://' + window.location.host + 
@@ -24,12 +22,17 @@
 
         chatSocket.onmessage = function(e) {
             var data = JSON.parse(e.data);
-            document.querySelector('#chat-log').innerHTML += ('<p>' + data.message + '</p>');
+            // 检查数据中是否包含作者信息，如果不包含则默认显示为"匿名用户"
+            var author = data.author || "匿名用户";
+            var message = data.message;
+            var timestamp = data.timestamp || new Date().toISOString(); // 如果没有时间戳则使用当前时间
+            document.querySelector('#chat-log').innerHTML += ('<p><b>' + author + '</b>: ' + message + ' <i>(' + timestamp + ')</i></p>');
         };
 
         document.querySelector('#chat-message-submit').onclick = function(e) {
             var messageInputDom = document.querySelector('#chat-message-input');
             var message = messageInputDom.value;
+            // 发送消息时，不需要在客户端指定作者，因为这应该由服务器处理
             chatSocket.send(JSON.stringify({
                 'message': message
             }));
@@ -37,10 +40,12 @@
         };
 
         document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // 如果按下的是Enter键
-                document.querySelector('#chat-message-submit').click();  // 触发发送按钮的点击事件
+            if (e.key === 'Enter') {
+                document.querySelector('#chat-message-submit').click();
             }
         };
     </script>
 </body>
 </html>
+
+

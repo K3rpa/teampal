@@ -1,7 +1,10 @@
+# users/consumers.py
 import json
-
+from datetime import datetime
 from channels.generic.websocket import AsyncWebsocketConsumer
-
+from channels.db import database_sync_to_async
+from django.contrib.auth import get_user_model
+from .models import Message
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -11,25 +14,68 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
+        # Accept the WebSocket connection before sending messages
         await self.accept()
 
+        # Load and send room's history messages to user
+        last_messages = await self.get_last_messages(self.room_name)
+        for message_data in last_messages:
+            await self.send(text_data=json.dumps({
+                "message": message_data['content'],
+                "author": message_data['author_username'] if message_data['author_username'] else "匿名用户",
+                "timestamp": message_data['timestamp']
+            }))
+
+    async def get_last_messages(self, room_name):
+        @database_sync_to_async
+        def get_messages():
+            # 这里改为按时间戳递增排序
+            messages = Message.objects.filter(room_name=room_name).order_by('timestamp')[:10]
+            return [{
+                'content': message.content,
+                'author_username': message.author.username if message.author else None,
+                'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            } for message in messages]
+
+        return await get_messages()
+
     async def disconnect(self, close_code):
-        # Leave room group
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
 
-        # Send message to room group
+        # Get user information
+        user = self.scope['user']
+        username = user.username if user.is_authenticated else "匿名用户"
+
+        # Save message to database
+        await self.save_message(user, message, self.room_name)
+
+        # Send message to room group with author information
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "chat.message", "message": message}
+            self.room_group_name,
+            {
+                "type": "chat_message",
+                "message": message,
+                "author": username,
+            }
         )
 
-    # Receive message from room group
     async def chat_message(self, event):
         message = event["message"]
+        author = event.get("author", "匿名用户")
 
         # Send message to WebSocket
-        await self.send(text_data=json.dumps({"message": message}))
+        await self.send(text_data=json.dumps({
+            "message": message,
+            "author": author,
+            "timestamp": event.get("timestamp", str(datetime.now())),
+        }))
+
+    @database_sync_to_async
+    def save_message(self, user, message, room_name):
+        User = get_user_model()
+        author_user = User.objects.get(username=user.username) if user.is_authenticated else None
+        Message.objects.create(author=author_user, content=message, room_name=room_name)
