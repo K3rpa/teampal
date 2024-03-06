@@ -101,7 +101,7 @@ def friend_list(request):
     if query:
         user_list = User.objects.filter(username__icontains=query).exclude(username=user.username)
     
-    return render(request, 'users/friend_list.html', {
+    return render(request, 'chat/friend_list.html', {
         'friends': friends,
         'users': user_list,
         'query': query
