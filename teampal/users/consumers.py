@@ -65,12 +65,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         message = event["message"]
         author = event.get("author", "undefine")
+        timestamp = event.get("timestamp", str(datetime.now()))
+
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             "message": message,
             "author": author,
-            "timestamp": event.get("timestamp", str(datetime.now())),
+            "timestamp": timestamp,
         }))
 
     @database_sync_to_async

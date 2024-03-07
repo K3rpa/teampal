@@ -1,10 +1,11 @@
-<!-- users/templates/users/friend_list.html -->
 <!DOCTYPE html>
 <html>
 <head>
     <title>Friend List</title>
 </head>
 <body>
+    <a href="{% url 'dashboard' %}" style="margin-bottom: 20px; display: inline-block;">&laquo; Return to Dashboard</a>
+
     <h1>Friend List</h1>
 
     <form action="{% url 'search_user' %}" method="get">
@@ -28,13 +29,22 @@
     </div>
     {% endif %}
 
+    <h2>Friend Requests:</h2>
+    {% for request in friend_requests %}
+        <div>
+            {{ request.from_user.username }} wants to be friends with you.
+            <a href="{% url 'accept_friend_request' request.id %}">Accept</a>
+            <a href="{% url 'decline_friend_request' request.id %}">Decline</a>
+        </div>
+    {% endfor %}
+
+    <h2>Your Friends:</h2>
     <ul>
         {% for friend in friends %}
             <li>
                 {{ friend.username }}
                 <a href="{% url 'start_private_chat' friend.username %}">Chat</a>
                 <a href="{% url 'remove_friend' friend.username %}">Remove</a>
-
             </li>
         {% empty %}
             <li>No friends to show.</li>

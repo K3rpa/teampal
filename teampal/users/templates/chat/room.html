@@ -9,9 +9,7 @@
     <a href="{% url 'friend_list' %}" style="margin-bottom: 20px; display: inline-block;">&laquo; Return to Friend List</a>
 
     <h1>Chat Room: {{ room_name }}</h1>
-    <div id="chat-log">
-        <p>Chat start here...</p>
-    </div>
+    <div id="chat-log"></div>
     <input id="chat-message-input" type="text" size="100" autofocus>
     <input id="chat-message-submit" type="button" value="发送">
 
@@ -27,7 +25,10 @@
             var author = data.author || "undefine";
             var message = data.message;
             var timestamp = data.timestamp || new Date().toISOString();
-            document.querySelector('#chat-log').innerHTML += ('<p><b>' + author + '</b>: ' + message + ' <i>(' + timestamp + ')</i></p>');
+            
+            // 修改这里来按照您想要的格式显示消息
+            var messageElement = `<b>${author}</b> (${timestamp})<br/>${message}<br/>`;
+            document.querySelector('#chat-log').innerHTML += messageElement;
         };
 
         document.querySelector('#chat-message-submit').onclick = function(e) {
@@ -47,5 +48,6 @@
     </script>
 </body>
 </html>
+
 
 

@@ -39,7 +39,7 @@
             background-color: #fff;
             border: 1px solid #ccc;
             padding: 10px;
-            z-index: 1002; 
+            z-index: 1002;
         }
 
         .logout-button {
@@ -49,32 +49,113 @@
 
         .top-bar {
             width: 100%;
-            height: 100px; /* 可以根据需要调整高度 */
-            background-color: #4b0082; /* 紫黑色背景 */
+            height: 100px;
+            /* 可以根据需要调整高度 */
+            background-color: #4b0082;
+            /* 紫黑色背景 */
             position: fixed;
             top: 0;
             left: 0;
             z-index: 1000;
             display: flex;
             align-items: center;
-            /*justify-content: space-around;*/ /* 使按钮均匀分布 */
+            /*justify-content: space-around;*/
+            /* 使按钮均匀分布 */
         }
 
         /* 圆形按钮样式 */
         .circle-button {
-            width: 60px; /* 圆形按钮的大小 */
+            width: 60px;
+            /* 圆形按钮的大小 */
             height: 60px;
-            border-radius: 50%; /* 创建圆形效果 */
+            border-radius: 50%;
+            /* 创建圆形效果 */
             background-size: cover;
             background-position: center;
             border: none;
             cursor: pointer;
         }
 
+        .sidebar {
+            width: 200px;
+            /* 长方形的宽度 */
+            height: 100%;
+            /* 长方形的高度，设置为100%以充满整个视窗的高度 */
+            background-color: orange;
+            /* 设置背景色为橙色 */
+            position: fixed;
+            /* 固定位置 */
+            left: 0;
+            /* 与左侧边缘对齐 */
+            top: 100px;
+            /* 与顶部对齐 */
+            z-index: 999;
+            /* 确保这个长方形位于大部分元素之下，但高于背景层 */
+        }
+
+        .channel-link {
+            display: block;
+            /* 块级显示 */
+            padding: 10px;
+            /* 内边距 */
+            color: white;
+            /* 文本颜色 */
+            text-decoration: none;
+            /* 移除文本下划线 */
+            border-bottom: 1px solid #ccc;
+            /* 底部边框 */
+        }
+
+
+        .chat-rooms {
+    position: absolute;
+    top: 100px;
+    left: 200px;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+    padding: 10px;
+    z-index: 900;
+}
+
+
+        .chat-room {
+            margin-bottom: 10px;
+        }
+        .sidebar button {
+        display: block; /* 确保按钮以块级元素显示，垂直堆叠 */
+        background-color: #fff; /* 设置按钮背景为白色 */
+        color: black; /* 设置按钮文字颜色为黑色 */
+        padding: 10px; /* 添加内边距 */
+        margin: 5px; /* 添加外边距 */
+        border: none; /* 移除边框 */
+        cursor: pointer; /* 鼠标悬停时显示指针 */
+    }
+
+    .sidebar button:hover {
+        background-color: #ddd; /* 鼠标悬停时按钮背景色变深 */
+    }
     </style>
 </head>
 
 <body>
+
+    <div class="sidebar">
+        <button onclick="loadChatRoom('general_chat', 'path/to/room.html')">General Chat</button>
+        <button onclick="loadChatRoom('team_search', 'path/to/room.html')">team_search</button>
+        <button onclick="loadChatRoom('trade', 'path/to/room.html')">trade</button>
+        <button onclick="loadChatRoom('tournament', 'path/to/room.html')">tournament</button>
+    </div>
+    
+    
+    <div id="chatrooms" class="chat-rooms">
+        <div id="general_chat" class="chatroom">General Chat content...</div>
+        <div id="team_search" class="chatroom" style="display:none;">Team Search content...</div>
+        <div id="trade" class="chatroom" style="display:none;">Trade content...</div>
+        <div id="tournament" class="chatroom" style="display:none;">Tournament content...</div>
+    </div>
+    
+
     <div class="top-bar">
         <button class="circle-button" style="background-image: url('{% static "images/Teampal_login_background.jpg" %}');" onclick="window.location.href='/dashboard/';"></button>
         <button class="circle-button" style="background-image: url('{% static "images/dashboard_cs2_logo.jpg" %}');" onclick="window.location.href='/cs2/';"></button>
@@ -82,8 +163,9 @@
         <button class="circle-button" style="background-image: url('{% static "images/dashboard_lol_logo.jpg" %}');" onclick="window.location.href='/lol/';"></button>
         <button class="circle-button" style="background-image: url('{% static "images/dashboard_valorant_logo.jpg" %}');" onclick="window.location.href='/valorant/';"></button>
         <button class="circle-button" style="background-image: url('{% static "images/Teampal_login_background.jpg" %}');" onclick="window.location.href='/friend_list/';"></button>
+
     </div>
-    
+
     <h1>Welcome to the Dashboard, {{ user.username }}!</h1>
     {% if user.socialaccount_set.exists %}
     {% with social_account=user.socialaccount_set.first %}
@@ -111,6 +193,21 @@
                 table.style.display = "none";
             }
         }
+        function showChatRoom(room) {
+            var rooms = document.getElementsByClassName('chatroom');
+            for (var i = 0; i < rooms.length; i++) {
+                rooms[i].style.display = 'none'; // Hide all rooms
+            }
+            document.getElementById(room).style.display = 'block'; // Show the selected room
+        }
+        
+        function loadChatRoom(roomId, url) {
+            fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById(roomId).innerHTML = html;
+            });
+        }   
     </script>
 </body>
 

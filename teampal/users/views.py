@@ -6,6 +6,8 @@ from .models import Friend
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib import messages
+from .models import FriendRequest
+
 
 
 User = get_user_model()
@@ -95,6 +97,7 @@ def friend_list(request):
     user = request.user
     friend_list_instance = Friend.objects.filter(user=user).first()
     friends = friend_list_instance.friends.all() if friend_list_instance else User.objects.none()
+    friend_requests = FriendRequest.objects.filter(to_user=user, is_active=True)
 
     query = request.GET.get('search', '')
     user_list = None
@@ -104,7 +107,8 @@ def friend_list(request):
     return render(request, 'chat/friend_list.html', {
         'friends': friends,
         'users': user_list,
-        'query': query
+        'query': query,
+        'friend_requests': friend_requests
     })
 
 def add_friend(request, username):
@@ -115,6 +119,8 @@ def add_friend(request, username):
         user = request.user
         new_friend = User.objects.get(username=username)
         if user != new_friend:
+            # 在这里调用send_friend_request来发送好友请求
+            send_friend_request(request, username)
             Friend.make_friend(user, new_friend)
             messages.success(request, f'{new_friend.username} has been added as a friend.')
         else:
@@ -123,6 +129,7 @@ def add_friend(request, username):
         messages.error(request, "The requested user does not exist.")
 
     return HttpResponseRedirect(reverse('friend_list'))
+
 
 def remove_friend(request, username):
     if not request.user.is_authenticated:
@@ -137,3 +144,62 @@ def remove_friend(request, username):
         messages.error(request, "The requested user does not exist.")
 
     return HttpResponseRedirect(reverse('friend_list'))
+
+
+def send_friend_request(request, username):
+    if request.user.is_authenticated:
+        try:
+            to_user = User.objects.get(username=username)
+            if request.user != to_user:
+                FriendRequest.objects.create(from_user=request.user, to_user=to_user)
+                messages.success(request, f'Friend request sent to {username}.')
+            else:
+                messages.error(request, "You cannot send a friend request to yourself.")
+        except User.DoesNotExist:
+            messages.error(request, f"User {username} not found.")
+    # 修改重定向到'friend_list'
+    return redirect('friend_list')
+
+
+def friend_requests(request):
+    if request.user.is_authenticated:
+        friend_requests = FriendRequest.objects.filter(to_user=request.user, is_active=True)
+        return render(request, 'some_template.html', {'friend_requests': friend_requests})
+
+
+def accept_friend_request(request, request_id):
+    if request.user.is_authenticated:
+        try:
+            friend_request = FriendRequest.objects.get(id=request_id, to_user=request.user, is_active=True)
+            friend_request.is_active = False
+            friend_request.save()
+            Friend.make_friend(request.user, friend_request.from_user)
+            messages.success(request, "Friend request accepted.")
+        except FriendRequest.DoesNotExist:
+            messages.error(request, "Friend request not found.")
+    # 修改重定向到'friend_list'
+    return redirect('friend_list')
+
+def decline_friend_request(request, request_id):
+    if request.user.is_authenticated:
+        try:
+            friend_request = FriendRequest.objects.get(id=request_id, to_user=request.user, is_active=True)
+            friend_request.is_active = False
+            friend_request.save()
+            messages.success(request, "Friend request declined.")
+        except FriendRequest.DoesNotExist:
+            messages.error(request, "Friend request not found.")
+    # 修改重定向到'friend_list'
+    return redirect('friend_list')
+
+def general_chat(request):
+    return render(request, 'chat/room.html', {'room_name': 'general_chat'})
+
+def team_search(request):
+    return render(request, 'chat/room.html', {'room_name': 'team_search'})
+
+def trade(request):
+    return render(request, 'chat/room.html', {'room_name': 'trade'})
+
+def tournament(request):
+    return render(request, 'chat/room.html', {'room_name': 'tournament'})
