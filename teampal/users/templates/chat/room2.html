@@ -1,4 +1,4 @@
-<!-- chat/templates/chat/room.html -->
+<!-- chat/templates/chat/room2.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,8 +6,6 @@
     <title>Chat Room: {{ room_name }}</title>
 </head>
 <body>
-    <a href="{% url 'friend_list' %}" style="margin-bottom: 20px; display: inline-block;">&laquo; Return to Friend List</a>
-
     <h1>Chat Room: {{ room_name }}</h1>
     <div id="chat-log"></div>
     <input id="chat-message-input" type="text" size="100" autofocus>
@@ -48,6 +46,5 @@
     </script>
 </body>
 </html>
-
 
 

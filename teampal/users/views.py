@@ -1,3 +1,5 @@
+# users/views.py
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout
 from django.contrib.auth import get_user_model
@@ -193,13 +195,14 @@ def decline_friend_request(request, request_id):
     return redirect('friend_list')
 
 def general_chat(request):
-    return render(request, 'chat/room.html', {'room_name': 'general_chat'})
+    return render(request, 'chat/room2.html', {'room_name': 'general_chat'})
 
-def team_search(request):
-    return render(request, 'chat/room.html', {'room_name': 'team_search'})
 
 def trade(request):
-    return render(request, 'chat/room.html', {'room_name': 'trade'})
+    return render(request, 'chat/room2.html', {'room_name': 'trade'})
 
 def tournament(request):
-    return render(request, 'chat/room.html', {'room_name': 'tournament'})
+    return render(request, 'chat/room2.html', {'room_name': 'tournament'})
+
+def team_search(request):
+    return render(request, 'chat/team_search.html')

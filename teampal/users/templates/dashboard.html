@@ -141,10 +141,10 @@
 <body>
 
     <div class="sidebar">
-        <button onclick="loadChatRoom('general_chat', 'path/to/room.html')">General Chat</button>
-        <button onclick="loadChatRoom('team_search', 'path/to/room.html')">team_search</button>
-        <button onclick="loadChatRoom('trade', 'path/to/room.html')">trade</button>
-        <button onclick="loadChatRoom('tournament', 'path/to/room.html')">tournament</button>
+        <button onclick="loadChatRoom('general_chat', '/dashboard/general_chat/')">General Chat</button>
+        <button onclick="loadChatRoom('team_search', '/dashboard/team_search/')">Team Search</button>
+        <button onclick="loadChatRoom('trade', '/dashboard/trade/')">Trade</button>
+        <button onclick="loadChatRoom('tournament', '/dashboard/tournament/')">Tournament</button>       
     </div>
     
     
@@ -194,20 +194,57 @@
             }
         }
         function showChatRoom(room) {
-            var rooms = document.getElementsByClassName('chatroom');
-            for (var i = 0; i < rooms.length; i++) {
-                rooms[i].style.display = 'none'; // Hide all rooms
-            }
-            document.getElementById(room).style.display = 'block'; // Show the selected room
-        }
+    var rooms = document.getElementsByClassName('chatroom');
+    for (var i = 0; i < rooms.length; i++) {
+        rooms[i].style.display = 'none'; // Hide all rooms
+    }
+    document.getElementById(room).style.display = 'block'; // Show the selected room
+}
+
         
-        function loadChatRoom(roomId, url) {
-            fetch(url)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById(roomId).innerHTML = html;
-            });
-        }   
+function loadChatRoom(roomId, url) {
+    // 隐藏所有聊天室
+    const chatrooms = document.querySelectorAll('.chatroom');
+    chatrooms.forEach(chatroom => {
+        chatroom.style.display = 'none';
+    });
+
+    // 加载并显示选定的聊天室
+    fetch(url)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+    })
+    .then(html => {
+        const roomDiv = document.getElementById(roomId);
+        roomDiv.innerHTML = html;
+        roomDiv.style.display = 'block';  // 显示当前聊天室
+
+        // 重新初始化或执行 script 元素
+        const scripts = roomDiv.querySelectorAll('script');
+        scripts.forEach(script => {
+            const newScript = document.createElement('script');
+            newScript.type = 'text/javascript';
+            newScript.async = false;
+            if (script.src) {
+                newScript.src = script.src;
+            } else {
+                newScript.textContent = script.textContent;
+            }
+            document.head.appendChild(newScript);
+            script.parentNode.removeChild(script);
+        });
+    })
+    .catch(error => {
+        console.error('Failed to load the chat room:', error);
+        // 在这里向用户显示错误消息
+    });
+}
+
+
+  
     </script>
 </body>
 

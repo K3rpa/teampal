@@ -22,6 +22,8 @@ urlpatterns = [
     path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
     path('dashboard/trade/', views.trade, name='dashboard.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    path('chat/<str:room_name>/', views.room, name='room'),
+
 
 
 ]

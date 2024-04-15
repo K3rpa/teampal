@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Team Search</title>
+    <style>
+        .info-box {
+            width: 300px;
+            height: 250px; /* 增加高度以适应计数显示 */
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            position: relative;
+            padding: 20px;
+        }
+        .join-button {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .count-display {
+            position: absolute;
+            bottom: 10px;
+            right: 10px; /* 显示在信息条的右下角 */
+            color: #4CAF50; /* 使计数数字突出显示 */
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info-container"></div> <!-- 容器用于放置信息条 -->
+
+    <script>
+        // 假设这是从服务器获取的团队数据
+        const teams = [
+            { name: "Example Team 1", description: "Here's a brief description of what team 1 is looking for." },
+            { name: "Example Team 2", description: "Here's a brief description of what team 2 is looking for." },
+            { name: "Example Team 3", description: "Here's a brief description of what team 3 is looking for." }
+        ];
+
+        // 获取容器
+        const container = document.getElementById('info-container');
+
+        // 遍历团队数据，为每个团队创建一个信息条
+        teams.forEach((team, index) => {
+            const infoBox = document.createElement('div');
+            infoBox.className = 'info-box';
+            infoBox.innerHTML = `
+                <h3>Team Name: ${team.name}</h3>
+                <p>Description: ${team.description}</p>
+                <div class="count-display" id="count-${index}">Count: 0</div>
+                <button class="join-button" onclick="incrementCount(${index})">Join Request</button>
+            `;
+            container.appendChild(infoBox); // 将信息条添加到容器中
+        });
+
+        // 定义增加计数的函数
+        function incrementCount(index) {
+            const countDisplay = document.getElementById(`count-${index}`);
+            let currentCount = parseInt(countDisplay.textContent.split(': ')[1]);
+            countDisplay.textContent = `Count: ${currentCount + 1}`;
+        }
+    </script>
+</body>
+</html>

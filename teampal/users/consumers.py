@@ -1,4 +1,5 @@
 # users/consumers.py
+from django.core.exceptions import ObjectDoesNotExist
 import json
 from datetime import datetime
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -78,5 +79,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, user, message, room_name):
         User = get_user_model()
-        author_user = User.objects.get(username=user.username) if user.is_authenticated else None
-        Message.objects.create(author=author_user, content=message, room_name=room_name)
+        try:
+            author_user = User.objects.get(username=user.username) if user.is_authenticated else None
+            Message.objects.create(author=author_user, content=message, room_name=room_name)
+        except ObjectDoesNotExist:
+            print(f"Failed to find user with username {user.username}")
+        except Exception as e:
+             print(f"An error occurred: {e}")
