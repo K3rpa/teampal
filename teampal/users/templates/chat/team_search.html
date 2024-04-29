@@ -117,7 +117,7 @@
             const members_needed = prompt("Enter number of members needed:");
             const contact = prompt("Enter contact information:");
             if (teamName && description && game && members_needed && contact) {
-                const teamData = { name: teamName, description: description, game: game, members_needed: parseInt(members_needed), contact: contact };
+                const teamData = { name: teamName, description: description, game: game, members_needed: parseInt(members_needed), contact: contact, creator: currentUserEmail };
                 websocket.send(JSON.stringify(teamData)); // Send new team data to the server
             }
         }

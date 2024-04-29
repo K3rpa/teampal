@@ -50,3 +50,4 @@ class Team(models.Model):
     game = models.CharField(max_length=100)
     members_needed = models.IntegerField()
     contact = models.CharField(max_length=100)
+    creator = models.CharField(max_length=255, null=True, blank=True)

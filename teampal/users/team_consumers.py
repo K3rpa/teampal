@@ -36,25 +36,27 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
             game = text_data_json.get("game", "")
             members_needed = text_data_json.get("members_needed", 0)
             contact = text_data_json.get("contact", "")
+            creator = text_data_json.get("creator", "")
 
-            if not all([team_name, description, game, members_needed, contact]):
+
+            if not all([team_name, description, game, members_needed, contact, creator]):
                 logger.error('Received incomplete data.')
                 return
 
-            await self.save_team(team_name, description, game, members_needed, contact)
+            await self.save_team(team_name, description, game, members_needed, contact, creator)
             await self.channel_layer.group_send(
                 self.room_group_name,
                {"type": "team.message", "team": {
                     "name": team_name, "description": description, "game": game,
-                 "members_needed": members_needed, "contact": contact
+                 "members_needed": members_needed, "contact": contact, "creator": creator
                 }}
         )
 
 
     @database_sync_to_async
-    def save_team(self, name, description, game, members_needed, contact):
+    def save_team(self, name, description, game, members_needed, contact, creator):
         try:
-            team = Team.objects.create(name=name, description=description, game=game, members_needed=members_needed, contact=contact)
+            team = Team.objects.create(name=name, description=description, game=game, members_needed=members_needed, contact=contact, creator=creator)
             print(f"Team created: {team}")
         except Exception as e:
             logger.error(f"An error occurred while saving the team: {e}")
@@ -68,7 +70,7 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
                 "description": team_info["description"],
                 "game": team_info["game"],
                 "members_needed": team_info["members_needed"],
-                "contact": team_info["contact"]
+                "contact": team_info["contact"],
+                "creator": team_info["creator"]
             }
         }))
-
