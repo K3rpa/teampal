@@ -26,37 +26,49 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        team_name = text_data_json.get("name", "")
-        description = text_data_json.get("description", "")
-        game = text_data_json.get("game", "")
-        members_needed = text_data_json.get("members_needed", 0)
-        contact = text_data_json.get("contact", "")
+        if text_data_json.get("type") == "fetch_teams":
+            teams = await self.get_teams()
+            await self.send(text_data=json.dumps({"type": "all_teams", "teams": teams}))
+            print(f"fetched")
+        else:
+            team_name = text_data_json.get("name", "")
+            description = text_data_json.get("description", "")
+            game = text_data_json.get("game", "")
+            members_needed = text_data_json.get("members_needed", 0)
+            contact = text_data_json.get("contact", "")
 
-        if not all([team_name, description, game, members_needed, contact]):
-            logger.error('Received incomplete data.')
-            return
+            if not all([team_name, description, game, members_needed, contact]):
+                logger.error('Received incomplete data.')
+                return
 
-        await self.save_team(team_name, description, game, members_needed, contact)
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {"type": "team.message", "team": {
-                "name": team_name, "description": description, "game": game,
-                "members_needed": members_needed, "contact": contact
-            }}
+            await self.save_team(team_name, description, game, members_needed, contact)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+               {"type": "team.message", "team": {
+                    "name": team_name, "description": description, "game": game,
+                 "members_needed": members_needed, "contact": contact
+                }}
         )
+
 
     @database_sync_to_async
     def save_team(self, name, description, game, members_needed, contact):
         try:
-            Team.objects.create(name=name, description=description, game=game, members_needed=members_needed, contact=contact)
+            team = Team.objects.create(name=name, description=description, game=game, members_needed=members_needed, contact=contact)
+            print(f"Team created: {team}")  # 添加打印语句来确认团队已创建
         except Exception as e:
             logger.error(f"An error occurred while saving the team: {e}")
 
     async def team_message(self, event):
+        team_info = event['team']
         await self.send(text_data=json.dumps({
-            "name": event["name"],
-            "description": event["description"],
-            "game": event["game"],
-            "members_needed": event["members_needed"],
-            "contact": event["contact"]
+            "type": "team.message",
+            "team": {
+                "name": team_info["name"],
+                "description": team_info["description"],
+                "game": team_info["game"],
+                "members_needed": team_info["members_needed"],
+                "contact": team_info["contact"]
+            }
         }))
+

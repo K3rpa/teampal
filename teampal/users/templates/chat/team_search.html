@@ -49,6 +49,8 @@
     <div id="filter-container">
         <input type="text" id="filter-input" placeholder="Search by Team Name or Game">
         <button class="filter-button" onclick="filterTeams()">Filter</button>
+        <button onclick="fetchTeams()">Refresh Teams</button>
+
     </div>
     <div id="info-container"></div> <!-- Container for displaying team boxes -->
     <button class="create-button" onclick="createTeam()">Create Team</button>
@@ -56,36 +58,51 @@
     <script>
         const container = document.getElementById('info-container');
         let teams = []; // This will store the teams data received from server
-        let websocket = new WebSocket('ws://localhost:8000/ws/team_search/'); // Adjust the URL to your WebSocket connection
-
+    
+        let websocket = new WebSocket('ws://localhost:8000/ws/team_search/');
+        websocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+        websocket.onerror = function(event) {
+            console.error('WebSocket error observed:', event);
+        };
         websocket.onmessage = function(event) {
+            console.log("Message received:", event.data);
             const data = JSON.parse(event.data);
+            console.log("Parsed data:", data);
             if (data.type === 'all_teams') {
                 teams = data.teams;
                 displayTeams(teams);
-            } else if (data.type === 'update_team') {
+            } else if (data.type === 'team.message') {
                 teams.push(data.team);
                 displayTeams(teams);
             }
         };
-
+    
         function displayTeams(filteredTeams) {
-            container.innerHTML = '';
+            container.innerHTML = '';  // Clears existing team displays
             filteredTeams.forEach((team, index) => {
+                console.log(`Team ${index} Creator:`, team.creator);
+
                 const infoBox = document.createElement('div');
                 infoBox.className = 'info-box';
                 infoBox.innerHTML = `
                     <h3>Team Name: ${team.name}</h3>
                     <p>Description: ${team.description}</p>
                     <p>Game: ${team.game}</p>
-                    <p>Members Needed: ${team.membersNeeded}</p>
+                    <p>Members Needed: ${team.members_needed}</p>
                     <button class="join-button" onclick="alert('Contact: ${team.contact}')">Join Request</button>
-                    ${team.creator === currentUserEmail ? '<button class="cancel-button" onclick="cancelTeam('+index+')">Cancel</button>' : ''}
+                   ${team.creator && team.creator === currentUserEmail ? `<button class="cancel-button" onclick="cancelTeam(${index})">Cancel</button>` : ''}
                 `;
-                container.appendChild(infoBox);
+                if (!team.name || !team.description || !team.game || typeof team.members_needed === 'undefined' || !team.contact) {
+                    console.error("Invalid team data", team);
+                } else {
+                    container.appendChild(infoBox);
+                }
+
             });
         }
-
+    
         function filterTeams() {
             const filterValue = document.getElementById('filter-input').value.toLowerCase();
             const filteredTeams = teams.filter(team => 
@@ -93,25 +110,30 @@
                 team.game.toLowerCase().includes(filterValue));
             displayTeams(filteredTeams);
         }
-
+    
         function createTeam() {
             const teamName = prompt("Enter team name:");
             const description = prompt("Enter team description:");
             const game = prompt("Enter game:");
-            const membersNeeded = prompt("Enter number of members needed:");
+            const members_needed = prompt("Enter number of members needed:");
             const contact = prompt("Enter contact information:");
-            if (teamName && description && game && membersNeeded && contact) {
-                const teamData = { name: teamName, description: description, game: game, membersNeeded: parseInt(membersNeeded), contact: contact };
+            if (teamName && description && game && members_needed && contact) {
+                const teamData = { name: teamName, description: description, game: game, members_needed: parseInt(members_needed), contact: contact };
                 websocket.send(JSON.stringify(teamData)); // Send new team data to the server
             }
         }
-
+    
         function cancelTeam(index) {
             teams.splice(index, 1); // Remove team locally
             displayTeams(teams); // Re-display teams
             // Optionally, send a delete command to the server
             websocket.send(JSON.stringify({ action: 'delete', index: index }));
         }
+        function fetchTeams() {
+            console.log("Fetching teams");
+            websocket.send(JSON.stringify({type: "fetch_teams"}));  // 假设后端理解这条消息并回应
+        }
     </script>
+    
 </body>
 </html>
