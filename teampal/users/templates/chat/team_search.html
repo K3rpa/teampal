@@ -56,6 +56,7 @@
     <button class="create-button" onclick="createTeam()">Create Team</button>
 
     <script>
+        var currentUserEmail = '{{ user.email }}';
         const container = document.getElementById('info-container');
         let teams = []; // This will store the teams data received from server
     
@@ -82,8 +83,6 @@
         function displayTeams(filteredTeams) {
             container.innerHTML = '';  // Clears existing team displays
             filteredTeams.forEach((team, index) => {
-                console.log(`Team ${index} Creator:`, team.creator);
-
                 const infoBox = document.createElement('div');
                 infoBox.className = 'info-box';
                 infoBox.innerHTML = `

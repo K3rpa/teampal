@@ -55,7 +55,7 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
     def save_team(self, name, description, game, members_needed, contact):
         try:
             team = Team.objects.create(name=name, description=description, game=game, members_needed=members_needed, contact=contact)
-            print(f"Team created: {team}")  # 添加打印语句来确认团队已创建
+            print(f"Team created: {team}")
         except Exception as e:
             logger.error(f"An error occurred while saving the team: {e}")
 
