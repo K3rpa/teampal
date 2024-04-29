@@ -12,8 +12,8 @@ class Message(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    room_name = models.CharField(max_length=255)  # 标识消息属于哪个聊天室
-    avatar_url = models.URLField(null=True, blank=True)  # 用户头像的 URL
+    room_name = models.CharField(max_length=255)  
+    avatar_url = models.URLField(null=True, blank=True)  
 
     def __str__(self):
         return self.content
@@ -43,3 +43,10 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username}"
+
+class Team(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    game = models.CharField(max_length=100)
+    members_needed = models.IntegerField()
+    contact = models.CharField(max_length=100)
