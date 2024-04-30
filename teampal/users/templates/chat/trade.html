@@ -80,6 +80,8 @@
         };
 
         function displayTrades(filteredTrades) {
+            console.log("Creator Email from trade:", trade.creator__email);
+            console.log("Current User Email:", currentUserEmail);
             container.innerHTML = '';
             filteredTrades.forEach((trade, index) => {
                 const infoBox = document.createElement('div');
@@ -94,7 +96,7 @@
                     <p>Current Offer: ${trade.current_offer}</p>
                     <p>Current Quantity: ${trade.current_quantity}</p>
                     <button class="offer-button" onclick="makeOffer(${index})">Make Offer</button>
-                    ${trade.creator && trade.creator === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
+                    ${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
                 `;
                 container.appendChild(infoBox);
             });
@@ -131,20 +133,12 @@
                 alert("All fields must be filled out correctly.");
             }       
         }
-
         function cancelTrade(index) {
-            if (confirm("Are you sure you want to cancel this trade?")) {
-                const tradeId = trades[index].id; // Assuming each trade has a unique ID
-                const cancelData = {
-                    type: "cancel_trade",
-                    trade_id: tradeId
-                };
-                websocket.send(JSON.stringify(cancelData));
-                trades.splice(index, 1); // Remove the trade from the local array
-                displayTrades(trades); // Refresh the display
-            }
+            const tradeId = trades[index].id;
+            websocket.send(JSON.stringify({ type: "cancel_trade", name: TradeName }));
+            teams.splice(index, 1); 
+            displayTeams(teams); 
         }
-
         function fetchTrades() {
             console.log("Fetching trades");
             websocket.send(JSON.stringify({type: "fetch_trades"}));

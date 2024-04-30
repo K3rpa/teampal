@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from users.models import Team  # Adjust the import according to your project structure
+from users.models import Team  
 
 class Command(BaseCommand):
     help = 'Clears all teams from the database'

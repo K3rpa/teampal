@@ -19,7 +19,7 @@ class TradeConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_trades(self):
-        return list(Trade.objects.values('game_name', 'item_name', 'description', 'status', 'quantity', 'expected_price', 'current_offer', 'current_quantity', 'creator'))
+        return list(Trade.objects.values('game_name', 'item_name', 'description', 'status', 'quantity', 'expected_price', 'current_offer', 'current_quantity', 'creator__email'))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -29,6 +29,12 @@ class TradeConsumer(AsyncWebsocketConsumer):
         if text_data_json.get("type") == "fetch_trades":
             trades = await self.get_trades()
             await self.send(text_data=json.dumps({"type": "all_trades", "trades": trades}))
+        elif text_data_json.get("type") == "cancel_trade":
+            trade_id = text_data_json.get("id", "")
+            if not trade_id:
+                logger.error('Received incomplete data for cancel.')
+                return
+            await self.cancel_trade(trade_id)
         else:
             game_name = text_data_json.get("game_name", "")
             item_name = text_data_json.get("item_name", "")
@@ -40,7 +46,7 @@ class TradeConsumer(AsyncWebsocketConsumer):
             current_quantity = text_data_json.get("current_quantity", 0)
             creator_email = text_data_json.get("creator", "")
 
-            if not all([game_name, item_name, description, status, quantity, expected_price, creator]):
+            if not all([game_name, item_name, description, status, quantity, expected_price, creator_email]):
                 logger.error('Received incomplete data.')
                 return
 
@@ -61,7 +67,8 @@ class TradeConsumer(AsyncWebsocketConsumer):
             )
 
     @database_sync_to_async
-    def save_trade(self, game_name, item_name, description, status, quantity, expected_price, current_offer, current_quantity, creator):
+    def save_trade(self, game_name, item_name, description, status, quantity, expected_price, current_offer, current_quantity, creator_email):
+        User = get_user_model()
         try:
             creator = User.objects.get(email=creator_email)
 
@@ -84,6 +91,16 @@ class TradeConsumer(AsyncWebsocketConsumer):
             logger.error(f"No user found with email {creator_email}")
         except Exception as e:
             logger.error(f"An error occurred while saving the trade: {e}")
+
+    def cancel_trade(self, trade_id):
+        try:
+            trade = Trade.objects.get(id=trade_id)
+            trade.delete()
+            logger.info(f"Trade {trade_id} cancelled successfully.")
+        except Trade.DoesNotExist:
+            logger.error(f"Trade with name {trade_id} does not exist.")
+        except Exception as e:
+            logger.error(f"Error when trying to cancel team {trade_id}: {e}")
 
     async def trade_message(self, event):
         trade_info = event['trade']
