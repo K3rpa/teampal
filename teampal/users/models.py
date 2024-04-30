@@ -51,3 +51,18 @@ class Team(models.Model):
     members_needed = models.IntegerField()
     contact = models.CharField(max_length=100)
     creator = models.CharField(max_length=255, null=True, blank=True)
+
+
+class Trade(models.Model):
+    game_name = models.CharField(max_length=255)
+    item_name = models.CharField(max_length=100)
+    description = models.TextField()
+    status = models.CharField(max_length=3, choices=[('WTB', 'Want to Buy'), ('WTS', 'Want to Sell')])
+    quantity = models.IntegerField()
+    expected_price = models.FloatField()
+    current_offer = models.FloatField()
+    current_quantity = models.IntegerField(default=0)
+    creator = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.item_name} ({self.status})"

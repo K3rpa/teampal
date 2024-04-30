@@ -121,7 +121,6 @@ def add_friend(request, username):
         user = request.user
         new_friend = User.objects.get(username=username)
         if user != new_friend:
-            # 在这里调用send_friend_request来发送好友请求
             send_friend_request(request, username)
             Friend.make_friend(user, new_friend)
             messages.success(request, f'{new_friend.username} has been added as a friend.')
@@ -159,7 +158,6 @@ def send_friend_request(request, username):
                 messages.error(request, "You cannot send a friend request to yourself.")
         except User.DoesNotExist:
             messages.error(request, f"User {username} not found.")
-    # 修改重定向到'friend_list'
     return redirect('friend_list')
 
 
@@ -179,7 +177,6 @@ def accept_friend_request(request, request_id):
             messages.success(request, "Friend request accepted.")
         except FriendRequest.DoesNotExist:
             messages.error(request, "Friend request not found.")
-    # 修改重定向到'friend_list'
     return redirect('friend_list')
 
 def decline_friend_request(request, request_id):
@@ -191,7 +188,6 @@ def decline_friend_request(request, request_id):
             messages.success(request, "Friend request declined.")
         except FriendRequest.DoesNotExist:
             messages.error(request, "Friend request not found.")
-    # 修改重定向到'friend_list'
     return redirect('friend_list')
 
 def general_chat(request):
@@ -199,10 +195,11 @@ def general_chat(request):
 
 
 def trade(request):
-    return render(request, 'chat/room2.html', {'room_name': 'trade'})
+    return render(request, 'chat/trade.html')
 
 def tournament(request):
     return render(request, 'chat/room2.html', {'room_name': 'tournament'})
 
 def team_search(request):
     return render(request, 'chat/team_search.html')
+

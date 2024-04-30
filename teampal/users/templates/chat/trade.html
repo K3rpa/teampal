@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Trade Search</title>
+    <style>
+        .info-box {
+            width: 300px;
+            height: 350px; /* Increased height to accommodate more information */
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            position: relative;
+            padding: 20px;
+        }
+        .offer-button, .create-button, .cancel-button, .filter-button {
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .offer-button {
+            background-color: #008CBA; /* Blue for offer button */
+            position: absolute;
+            bottom: 40px; /* Position adjusted */
+            left: 10px;
+        }
+        .cancel-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #f44336; /* Red for cancel button */
+        }
+        .create-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50; /* Green for create button */
+        }
+        .filter-button {
+            background-color: #4CAF50;
+        }
+        #filter-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="filter-container">
+        <input type="text" id="filter-input" placeholder="Search by Item Name or Game">
+        <button class="filter-button" onclick="filterTrades()">Filter</button>
+        <button onclick="fetchTrades()">Refresh Trades</button>
+    </div>
+    <div id="info-container"></div>
+    <button class="create-button" onclick="createTrade()">Create Trade</button>
+
+    <script>
+        var currentUserEmail = '{{ user.email }}'; // Assuming user email is available
+        const container = document.getElementById('info-container');
+        let trades = [];
+
+        let websocket = new WebSocket('ws://localhost:8000/ws/trade_search/');
+        websocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+        websocket.onerror = function(event) {
+            console.error('WebSocket error observed:', event);
+        };
+        websocket.onmessage = function(event) {
+            console.log("Message received:", event.data);
+            const data = JSON.parse(event.data);
+            console.log("Parsed data:", data);
+            if (data.type === 'all_trades') {
+                trades = data.trades;
+                displayTrades(trades);
+            } else if (data.type === 'trade.message') {
+                trades.push(data.trade);
+                displayTrades(trades);
+            }
+        };
+
+        function displayTrades(filteredTrades) {
+            container.innerHTML = '';
+            filteredTrades.forEach((trade, index) => {
+                const infoBox = document.createElement('div');
+                infoBox.className = 'info-box';
+                infoBox.innerHTML = `
+                    <h3>Item: ${trade.item_name}</h3>
+                    <p>Description: ${trade.description}</p>
+                    <p>Game: ${trade.game_name}</p>
+                    <p>Status: ${trade.status}</p>
+                    <p>Quantity: ${trade.quantity}</p>
+                    <p>Expected Price: ${trade.expected_price}</p>
+                    <p>Current Offer: ${trade.current_offer}</p>
+                    <p>Current Quantity: ${trade.current_quantity}</p>
+                    <button class="offer-button" onclick="makeOffer(${index})">Make Offer</button>
+                    ${trade.creator && trade.creator === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
+                `;
+                container.appendChild(infoBox);
+            });
+        }
+
+        function filterTrades() {
+            const filterValue = document.getElementById('filter-input').value.toLowerCase();
+            const filteredTrades = trades.filter(trade => 
+                trade.item_name.toLowerCase().includes(filterValue) ||
+                trade.game_name.toLowerCase().includes(filterValue));
+            displayTrades(filteredTrades);
+        }
+
+        function createTrade() {
+            const gameName = prompt("Enter the game name:");
+            const itemName = prompt("Enter the item name:");
+            const description = prompt("Enter a description:");
+            const status = prompt("Enter status (WTB or WTS):");
+            const quantity = parseInt(prompt("Enter the quantity:"), 10);
+            const expectedPrice = parseFloat(prompt("Enter the expected price:"));
+            if (gameName && itemName && description && status && quantity && expectedPrice) {
+                const tradeData = {
+                    type: "create_trade",
+                    game_name: gameName,
+                    item_name: itemName,
+                    description: description,
+                    status: status,
+                    quantity: quantity,
+                    expected_price: expectedPrice,
+                    creator: currentUserEmail
+                };
+                websocket.send(JSON.stringify(tradeData));
+            } else {
+                alert("All fields must be filled out correctly.");
+            }       
+        }
+
+        function cancelTrade(index) {
+            if (confirm("Are you sure you want to cancel this trade?")) {
+                const tradeId = trades[index].id; // Assuming each trade has a unique ID
+                const cancelData = {
+                    type: "cancel_trade",
+                    trade_id: tradeId
+                };
+                websocket.send(JSON.stringify(cancelData));
+                trades.splice(index, 1); // Remove the trade from the local array
+                displayTrades(trades); // Refresh the display
+            }
+        }
+
+        function fetchTrades() {
+            console.log("Fetching trades");
+            websocket.send(JSON.stringify({type: "fetch_trades"}));
+        }
+    </script>
+</body>
+</html>

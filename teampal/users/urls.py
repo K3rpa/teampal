@@ -18,11 +18,13 @@ urlpatterns = [
     path('friend_requests/', views.friend_requests, name='friend_requests'),
     path('accept_friend_request/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
     path('decline_friend_request/<int:request_id>/', views.decline_friend_request, name='decline_friend_request'),
+    #----------------dashboard---------------------------------
     path('dashboard/general_chat/', views.general_chat, name='dashboard.general_chat'),
     path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
     path('dashboard/trade/', views.trade, name='dashboard.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
     path('chat/<str:room_name>/', views.room, name='room'),
+    #----------------dashboard---------------------------------
 
 
 

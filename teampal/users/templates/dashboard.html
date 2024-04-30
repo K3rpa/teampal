@@ -8,33 +8,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <style>
-        /* 头像样式 */
         .avatar {
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            /* 将图片设置为圆形 */
             margin-top: 10px;
             position: fixed;
-            /* 使用固定定位 */
             top: 10px;
-            /* 距离顶部10px */
             right: 10px;
-            /* 距离右侧10px */
             z-index: 1001;
-            /* 确保头像显示在其他元素之上 */
             cursor: pointer;
-            /* 添加鼠标指针样式 */
         }
 
-        /* 表格样式 */
         .logout-table {
             display: none;
-            /* 默认隐藏表格 */
             position: absolute;
-            /* 绝对定位 */
             top: 70px;
-            /* 距离头像下方70px */
             right: 10px;
             background-color: #fff;
             border: 1px solid #ccc;
@@ -50,26 +39,19 @@
         .top-bar {
             width: 100%;
             height: 100px;
-            /* 可以根据需要调整高度 */
             background-color: #4b0082;
-            /* 紫黑色背景 */
             position: fixed;
             top: 0;
             left: 0;
             z-index: 1000;
             display: flex;
             align-items: center;
-            /*justify-content: space-around;*/
-            /* 使按钮均匀分布 */
         }
 
-        /* 圆形按钮样式 */
         .circle-button {
             width: 60px;
-            /* 圆形按钮的大小 */
             height: 60px;
             border-radius: 50%;
-            /* 创建圆形效果 */
             background-size: cover;
             background-position: center;
             border: none;
@@ -78,32 +60,20 @@
 
         .sidebar {
             width: 200px;
-            /* 长方形的宽度 */
             height: 100%;
-            /* 长方形的高度，设置为100%以充满整个视窗的高度 */
             background-color: orange;
-            /* 设置背景色为橙色 */
             position: fixed;
-            /* 固定位置 */
             left: 0;
-            /* 与左侧边缘对齐 */
             top: 100px;
-            /* 与顶部对齐 */
             z-index: 999;
-            /* 确保这个长方形位于大部分元素之下，但高于背景层 */
         }
 
         .channel-link {
             display: block;
-            /* 块级显示 */
             padding: 10px;
-            /* 内边距 */
             color: white;
-            /* 文本颜色 */
             text-decoration: none;
-            /* 移除文本下划线 */
             border-bottom: 1px solid #ccc;
-            /* 底部边框 */
         }
 
 
@@ -123,17 +93,17 @@
             margin-bottom: 10px;
         }
         .sidebar button {
-        display: block; /* 确保按钮以块级元素显示，垂直堆叠 */
-        background-color: #fff; /* 设置按钮背景为白色 */
-        color: black; /* 设置按钮文字颜色为黑色 */
-        padding: 10px; /* 添加内边距 */
-        margin: 5px; /* 添加外边距 */
-        border: none; /* 移除边框 */
-        cursor: pointer; /* 鼠标悬停时显示指针 */
+        display: block; 
+        background-color: #fff;
+        color: black;
+        padding: 10px;
+        margin: 5px;
+        border: none;
+        cursor: pointer;
     }
 
     .sidebar button:hover {
-        background-color: #ddd; /* 鼠标悬停时按钮背景色变深 */
+        background-color: #ddd;
     }
     </style>
 </head>
@@ -196,20 +166,18 @@
         function showChatRoom(room) {
     var rooms = document.getElementsByClassName('chatroom');
     for (var i = 0; i < rooms.length; i++) {
-        rooms[i].style.display = 'none'; // Hide all rooms
+        rooms[i].style.display = 'none';
     }
-    document.getElementById(room).style.display = 'block'; // Show the selected room
+    document.getElementById(room).style.display = 'block'; 
 }
 
         
 function loadChatRoom(roomId, url) {
-    // 隐藏所有聊天室
     const chatrooms = document.querySelectorAll('.chatroom');
     chatrooms.forEach(chatroom => {
         chatroom.style.display = 'none';
     });
 
-    // 加载并显示选定的聊天室
     fetch(url)
     .then(response => {
         if (!response.ok) {
@@ -220,9 +188,9 @@ function loadChatRoom(roomId, url) {
     .then(html => {
         const roomDiv = document.getElementById(roomId);
         roomDiv.innerHTML = html;
-        roomDiv.style.display = 'block';  // 显示当前聊天室
+        roomDiv.style.display = 'block'; 
 
-        // 重新初始化或执行 script 元素
+  
         const scripts = roomDiv.querySelectorAll('script');
         scripts.forEach(script => {
             const newScript = document.createElement('script');
@@ -239,7 +207,6 @@ function loadChatRoom(roomId, url) {
     })
     .catch(error => {
         console.error('Failed to load the chat room:', error);
-        // 在这里向用户显示错误消息
     });
 }
 

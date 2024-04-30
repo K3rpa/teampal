@@ -28,7 +28,7 @@
             position: absolute;
             bottom: 10px;
             right: 10px;
-            background-color: #f44336; /* Red for cancel */
+            background-color: #f44336; 
         }
         .create-button {
             position: absolute;
@@ -52,13 +52,13 @@
         <button onclick="fetchTeams()">Refresh Teams</button>
 
     </div>
-    <div id="info-container"></div> <!-- Container for displaying team boxes -->
+    <div id="info-container"></div> 
     <button class="create-button" onclick="createTeam()">Create Team</button>
 
     <script>
         var currentUserEmail = '{{ user.email }}';
         const container = document.getElementById('info-container');
-        let teams = []; // This will store the teams data received from server
+        let teams = [];
     
         let websocket = new WebSocket('ws://localhost:8000/ws/team_search/');
         websocket.onopen = function() {
@@ -81,7 +81,7 @@
         };
     
         function displayTeams(filteredTeams) {
-            container.innerHTML = '';  // Clears existing team displays
+            container.innerHTML = ''; 
             filteredTeams.forEach((team, index) => {
                 const infoBox = document.createElement('div');
                 infoBox.className = 'info-box';
@@ -118,19 +118,19 @@
             const contact = prompt("Enter contact information:");
             if (teamName && description && game && members_needed && contact) {
                 const teamData = { name: teamName, description: description, game: game, members_needed: parseInt(members_needed), contact: contact, creator: currentUserEmail };
-                websocket.send(JSON.stringify(teamData)); // Send new team data to the server
+                websocket.send(JSON.stringify(teamData)); 
             }
         }
     
         function cancelTeam(index) {
-            teams.splice(index, 1); // Remove team locally
-            displayTeams(teams); // Re-display teams
-            // Optionally, send a delete command to the server
-            websocket.send(JSON.stringify({ action: 'delete', index: index }));
+            const teamName = teams[index].name;
+            websocket.send(JSON.stringify({ type: "cancel_team", name: teamName }));
+            teams.splice(index, 1); 
+            displayTeams(teams); 
         }
         function fetchTeams() {
             console.log("Fetching teams");
-            websocket.send(JSON.stringify({type: "fetch_teams"}));  // 假设后端理解这条消息并回应
+            websocket.send(JSON.stringify({type: "fetch_teams"})); 
         }
     </script>
     

@@ -19,7 +19,7 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_teams(self):
-        return list(Team.objects.values('name', 'description', 'game', 'members_needed', 'contact'))
+        return list(Team.objects.values('name', 'description', 'game', 'members_needed', 'contact', 'creator'))
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -30,6 +30,12 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
             teams = await self.get_teams()
             await self.send(text_data=json.dumps({"type": "all_teams", "teams": teams}))
             print(f"fetched")
+        elif text_data_json.get("type") == "cancel_team":
+            team_name = text_data_json.get("name", "")
+            if not team_name:
+                logger.error('Received incomplete data for cancel.')
+                return
+            await self.cancel_team(team_name)
         else:
             team_name = text_data_json.get("name", "")
             description = text_data_json.get("description", "")
@@ -60,6 +66,17 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
             print(f"Team created: {team}")
         except Exception as e:
             logger.error(f"An error occurred while saving the team: {e}")
+    @database_sync_to_async
+    def cancel_team(self, team_name):
+        try:
+            team = Team.objects.get(name=team_name)
+            team.delete()
+            logger.info(f"Team {team_name} cancelled successfully.")
+        except Team.DoesNotExist:
+            logger.error(f"Team with name {team_name} does not exist.")
+        except Exception as e:
+            logger.error(f"Error when trying to cancel team {team_name}: {e}")
+
 
     async def team_message(self, event):
         team_info = event['team']
