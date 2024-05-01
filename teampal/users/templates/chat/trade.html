@@ -6,35 +6,41 @@
     <style>
         .info-box {
             width: 300px;
-            height: 350px; /* Increased height to accommodate more information */
+            height: 350px;
             border: 1px solid #ccc;
             margin-bottom: 20px;
             position: relative;
             padding: 20px;
         }
-        .offer-button, .create-button, .cancel-button, .filter-button {
+        .offer-button, .history-button, .create-button, .cancel-button, .filter-button {
             padding: 10px 20px;
             color: white;
             border: none;
             cursor: pointer;
         }
         .offer-button {
-            background-color: #008CBA; /* Blue for offer button */
+            background-color: #008CBA;
             position: absolute;
-            bottom: 40px; /* Position adjusted */
+            bottom: 60px;
+            left: 10px;
+        }
+        .history-button {
+            background-color: #6a5acd;
+            position: absolute;
+            bottom: 30px;
             left: 10px;
         }
         .cancel-button {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            background-color: #f44336; /* Red for cancel button */
+            background-color: #f44336;
         }
         .create-button {
             position: absolute;
             top: 10px;
             right: 10px;
-            background-color: #4CAF50; /* Green for create button */
+            background-color: #4CAF50;
         }
         .filter-button {
             background-color: #4CAF50;
@@ -55,7 +61,7 @@
     <button class="create-button" onclick="createTrade()">Create Trade</button>
 
     <script>
-        var currentUserEmail = '{{ user.email }}'; // Assuming user email is available
+        var currentUserEmail = '{{ user.email }}'; 
         const container = document.getElementById('info-container');
         let trades = [];
 
@@ -74,14 +80,13 @@
                 trades = data.trades;
                 displayTrades(trades);
             } else if (data.type === 'trade.message') {
+                console.log("New trade received:", data.trade);
                 trades.push(data.trade);
                 displayTrades(trades);
             }
         };
 
         function displayTrades(filteredTrades) {
-            console.log("Creator Email from trade:", trade.creator__email);
-            console.log("Current User Email:", currentUserEmail);
             container.innerHTML = '';
             filteredTrades.forEach((trade, index) => {
                 const infoBox = document.createElement('div');
@@ -96,10 +101,16 @@
                     <p>Current Offer: ${trade.current_offer}</p>
                     <p>Current Quantity: ${trade.current_quantity}</p>
                     <button class="offer-button" onclick="makeOffer(${index})">Make Offer</button>
+                    <button class="history-button" onclick="fetchHistory(${trade.id})">Check History</button>
                     ${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
                 `;
                 container.appendChild(infoBox);
             });
+        }
+
+        function fetchHistory(tradeId) {
+            console.log("Fetching history for trade:", tradeId);
+            websocket.send(JSON.stringify({type: "fetch_offers", trade_id: tradeId}));
         }
 
         function filterTrades() {
@@ -116,7 +127,10 @@
             const description = prompt("Enter a description:");
             const status = prompt("Enter status (WTB or WTS):");
             const quantity = parseInt(prompt("Enter the quantity:"), 10);
-            const expectedPrice = parseFloat(prompt("Enter the expected price:"));
+            const expectedPrice = parseFloat(prompt("Enter the expected price(total):"));
+
+            console.log("Data to send:", gameName, itemName, description, status, quantity, expectedPrice);
+
             if (gameName && itemName && description && status && quantity && expectedPrice) {
                 const tradeData = {
                     type: "create_trade",
@@ -133,12 +147,15 @@
                 alert("All fields must be filled out correctly.");
             }       
         }
+
         function cancelTrade(index) {
             const tradeId = trades[index].id;
-            websocket.send(JSON.stringify({ type: "cancel_trade", name: TradeName }));
-            teams.splice(index, 1); 
-            displayTeams(teams); 
+            console.log("Cancelling trade with ID:", tradeId);
+            websocket.send(JSON.stringify({ type: "cancel_trade", id: tradeId }));
+            trades.splice(index, 1); // Remove the trade from the list
+            displayTrades(trades); // Update display
         }
+
         function fetchTrades() {
             console.log("Fetching trades");
             websocket.send(JSON.stringify({type: "fetch_trades"}));

@@ -66,3 +66,13 @@ class Trade(models.Model):
 
     def __str__(self):
         return f"{self.item_name} ({self.status})"
+
+class Offer(models.Model):
+    trade = models.ForeignKey(Trade, on_delete=models.CASCADE, related_name='offers')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    offer_price = models.FloatField()
+    offer_quantity = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
