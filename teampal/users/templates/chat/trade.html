@@ -160,6 +160,21 @@
             console.log("Fetching trades");
             websocket.send(JSON.stringify({type: "fetch_trades"}));
         }
+        function makeOffer(tradeId) {
+            const offerPrice = parseFloat(prompt("Enter your offer price:"));
+            const offerQuantity = parseInt(prompt("Enter your offer quantity:"), 10);
+            if (!isNaN(offerPrice) && !isNaN(offerQuantity)) {
+                websocket.send(JSON.stringify({
+                    type: "make_offer",
+                    trade_id: tradeId,
+                    offer_price: offerPrice,
+                    offer_quantity: offerQuantity
+                }));
+            } else {
+                alert("Invalid input. Please enter valid numbers.");
+            }
+}
+
     </script>
 </body>
 </html>
