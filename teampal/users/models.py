@@ -55,7 +55,7 @@ class Team(models.Model):
 
 class Trade(models.Model):
     game_name = models.CharField(max_length=255)
-    item_name = models.CharField(max_length=100)
+    item_name = models.CharField(max_length=100, unique=True)
     description = models.TextField()
     status = models.CharField(max_length=3, choices=[('WTB', 'Want to Buy'), ('WTS', 'Want to Sell')])
     quantity = models.IntegerField()

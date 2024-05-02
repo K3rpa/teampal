@@ -100,7 +100,7 @@
                     <p>Expected Price: ${trade.expected_price}</p>
                     <p>Current Offer: ${trade.current_offer}</p>
                     <p>Current Quantity: ${trade.current_quantity}</p>
-                    <button class="offer-button" onclick="makeOffer(${index})">Make Offer</button>
+                    <button class="offer-button" onclick="makeOffer(${trade.item_name})">Make Offer</button>
                     <button class="history-button" onclick="fetchHistory(${trade.id})">Check History</button>
                     ${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
                 `;
@@ -140,7 +140,8 @@
                     status: status,
                     quantity: quantity,
                     expected_price: expectedPrice,
-                    creator: currentUserEmail
+                    creator: currentUserEmail,
+                    user_email: currentUserEmail
                 };
                 websocket.send(JSON.stringify(tradeData));
             } else {
@@ -152,28 +153,29 @@
             const tradeId = trades[index].id;
             console.log("Cancelling trade with ID:", tradeId);
             websocket.send(JSON.stringify({ type: "cancel_trade", id: tradeId }));
-            trades.splice(index, 1); // Remove the trade from the list
-            displayTrades(trades); // Update display
+            trades.splice(index, 1);
+            displayTrades(trades);
         }
 
         function fetchTrades() {
             console.log("Fetching trades");
             websocket.send(JSON.stringify({type: "fetch_trades"}));
         }
-        function makeOffer(tradeId) {
+        function makeOffer(itemName) {
             const offerPrice = parseFloat(prompt("Enter your offer price:"));
             const offerQuantity = parseInt(prompt("Enter your offer quantity:"), 10);
             if (!isNaN(offerPrice) && !isNaN(offerQuantity)) {
                 websocket.send(JSON.stringify({
                     type: "make_offer",
-                    trade_id: tradeId,
+                    item_name: itemName,
                     offer_price: offerPrice,
-                    offer_quantity: offerQuantity
+                    offer_quantity: offerQuantity,
+                    user_email: currentUserEmail
                 }));
             } else {
                 alert("Invalid input. Please enter valid numbers.");
             }
-}
+        }       
 
     </script>
 </body>

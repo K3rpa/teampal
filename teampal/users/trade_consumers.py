@@ -1,5 +1,4 @@
 # users/trade_consumers.py
-
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
@@ -27,9 +26,13 @@ class TradeConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_trade_offers(self, trade_id):
         offers = Offer.objects.filter(trade_id=trade_id).order_by('-created_at').values(
-            'user__username', 'offer_price', 'offer_quantity', 'created_at'
+            'user__username', 'offer_price', 'offer_quantity'
         )
-        return list(offers)
+        return [{
+            'user_username': offer['user__username'],
+            'offer_price': offer['offer_price'],
+            'offer_quantity': offer['offer_quantity']
+        } for offer in offers]
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -37,22 +40,22 @@ class TradeConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         logger.info(f"Received message: {text_data}")
         text_data_json = json.loads(text_data)
-        user = self.scope["user"]
+        User = get_user_model()
+
         if text_data_json.get("type") == "fetch_trades":
             trades = await self.get_trades()
             await self.send(text_data=json.dumps({"type": "all_trades", "trades": trades}))
         elif text_data_json.get("type") == "create_trade":
-            await self.create_trade(text_data_json)
+            creator_email = text_data_json['creator']
+            await self.create_trade(text_data_json, creator_email)
         elif text_data_json.get("type") == "make_offer":
-            if user.is_authenticated:
-                await self.create_or_update_offer(
-                    trade_id=text_data_json['trade_id'],
-                    user=user,
-                    offer_price=text_data_json['offer_price'],
-                    offer_quantity=text_data_json['offer_quantity']
-                )
-            else:
-                await self.send(text_data=json.dumps({"error": "User not authenticated"}))
+            offerer_email = text_data_json['user_email']
+            await self.create_or_update_offer(
+                item_name=text_data_json["item_name"],
+                email=offerer_email,
+                offer_price=text_data_json['offer_price'],
+                offer_quantity=text_data_json['offer_quantity']
+            )
         elif text_data_json.get("type") == "cancel_trade":
             trade_id = text_data_json.get("id", "")
             await self.cancel_trade(trade_id)
@@ -72,28 +75,25 @@ class TradeConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error when trying to cancel trade {trade_id}: {e}")
 
-    async def create_or_update_offer(self, trade_id, user, offer_price, offer_quantity):
-        logger.info(f"Attempting to create/update offer for trade ID: {trade_id}")
+    async def create_or_update_offer(self, item_name, email, offer_price, offer_quantity):
+        User = get_user_model()
+        user = await database_sync_to_async(User.objects.get)(email=email)
         try:
-            trade = await database_sync_to_async(Trade.objects.get)(id=trade_id)
-            logger.info(f"Trade found: {trade}")
+            trade = await database_sync_to_async(Trade.objects.get)(item_name=item_name)
             offer, created = await database_sync_to_async(Offer.objects.update_or_create)(
                 trade=trade,
                 user=user,
                 defaults={'offer_price': offer_price, 'offer_quantity': offer_quantity}
             )
-            logger.info(f"Offer {'created' if created else 'updated'}: {offer}")
             await self.update_trade_current_offer(trade)
         except Trade.DoesNotExist:
-            logger.error(f"Trade not found with ID: {trade_id}")
-        except Exception as e:
-            logger.error(f"An error occurred: {str(e)}")
+            logger.error(f"No trade found with item_name {item_name}.")
 
     async def update_trade_current_offer(self, trade):
         if trade.status == 'WTB':
-            best_offer = await database_sync_to_async(Offer.objects.filter)(trade=trade).order_by('offer_price').first()
+            best_offer = await database_sync_to_async(self.get_best_offer)(trade, 'offer_price')
         elif trade.status == 'WTS':
-            best_offer = await database_sync_to_async(Offer.objects.filter)(trade=trade).order_by('-offer_price').first()
+            best_offer = await database_sync_to_async(self.get_best_offer)(trade, '-offer_price')
 
         if best_offer:
             trade.current_offer = best_offer.offer_price
@@ -103,43 +103,38 @@ class TradeConsumer(AsyncWebsocketConsumer):
             trade.current_quantity = 0
         await database_sync_to_async(trade.save)()
 
-    async def create_trade(self, data):
+    async def create_trade(self, data, creator_email):
         User = get_user_model()
-        try:
-            creator = await database_sync_to_async(User.objects.get)(email=data['creator'])
-            trade = await database_sync_to_async(Trade.objects.create)(
-                game_name=data['game_name'],
-                item_name=data['item_name'],
-                description=data['description'],
-                status=data['status'],
-                quantity=data['quantity'],
-                expected_price=data['expected_price'],
-                current_offer=data['expected_price'],
-                current_quantity=0,
-                creator=creator
-            )
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "trade.message",
-                    "trade": {
-                        'id': trade.id,
-                        'game_name': trade.game_name,
-                        'item_name': trade.item_name,
-                        'description': trade.description,
-                        'status': trade.status,
-                        'quantity': trade.quantity,
-                        'expected_price': trade.expected_price,
-                        'current_offer': trade.current_offer,
-                        'current_quantity': trade.current_quantity,
-                        'creator__email': creator.email
+        creator = await database_sync_to_async(User.objects.get)(email=creator_email)
+        trade = await database_sync_to_async(Trade.objects.create)(
+            game_name=data['game_name'],
+            item_name=data['item_name'],
+            description=data['description'],
+            status=data['status'],
+            quantity=data['quantity'],
+            expected_price=data['expected_price'],
+            current_offer=0,
+            current_quantity=0,
+            creator=creator
+        )
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "trade.message",
+                "trade": {
+                    'id': trade.id,
+                    'game_name': trade.game_name,
+                    'item_name': trade.item_name,
+                    'description': trade.description,
+                    'status': trade.status,
+                    'quantity': trade.quantity,
+                    'expected_price': trade.expected_price,
+                    'current_offer': trade.current_offer,
+                    'current_quantity': trade.current_quantity,
+                    'creator__email': creator.email
                 }
             }
         )
-        except User.DoesNotExist:
-            logger.error(f"No user found with email {data['creator']}")
-        except Exception as e:
-            logger.error(f"An error occurred while creating trade: {e}")
 
     async def trade_message(self, event):
         trade_info = event['trade']
@@ -147,3 +142,6 @@ class TradeConsumer(AsyncWebsocketConsumer):
             'type': 'trade.message',
             'trade': trade_info
         }))
+
+    def get_best_offer(self, trade, order):
+        return Offer.objects.filter(trade=trade).order_by(order).first()
