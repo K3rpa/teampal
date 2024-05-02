@@ -114,7 +114,9 @@
                     <p>Current Quantity: ${trade.current_quantity}</p>
                     <button class="offer-button" onclick="makeOffer(${trade.item_name})">Make Offer</button>
                     <button class="history-button" onclick="fetchHistory(${trade.id})">Check History</button>
+                    #${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
                     ${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
+
                 `;
                 container.appendChild(infoBox);
             });
@@ -217,7 +219,9 @@
             } else {
                 alert("Invalid input. Please enter valid numbers.");
             }
-        }       
+        }
+   
+
 
     </script>
 </body>

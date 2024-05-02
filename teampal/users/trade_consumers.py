@@ -63,7 +63,6 @@ class TradeConsumer(AsyncWebsocketConsumer):
             trade_id = text_data_json.get("trade_id", "")
             offers = await self.get_trade_offers(trade_id)
             await self.send(text_data=json.dumps({"type": "trade_offers", "offers": offers}))
-
     @database_sync_to_async
     def cancel_trade(self, trade_id):
         try:
@@ -86,33 +85,21 @@ class TradeConsumer(AsyncWebsocketConsumer):
                 defaults={'offer_price': offer_price, 'offer_quantity': offer_quantity}
             )
             logger.info(f"Processing new offer for trade {trade.id}: {offer_price} offered by {email}")
-            #if trade.status == 'WTB' and (trade.current_offer is None or offer_price < trade.current_offer):
-            #    logger.info(f"Updating WTB trade {trade.id}: New best offer {offer_price} is lower than current {trade.current_offer}")
-#
-            #    trade.current_offer = offer_price
-            #    trade.current_quantity = offer_quantity
-            #elif trade.status == 'WTS' and (trade.current_offer is None or offer_price > trade.current_offer):
-            #    logger.info(f"Updating WTS trade {trade.id}: New best offer {offer_price} is higher than current {trade.current_offer}")
-#
-            #    trade.current_offer = offer_price
-            #    trade.current_quantity = offer_quantity
-            #await database_sync_to_async(trade.save)()
-            await self.update_trade_current_offer(trade)
+            await self.update_trade_current_offer(trade, offer_price, offer_quantity)
         except Trade.DoesNotExist:
             logger.error(f"No trade found with item_name {item_name}.")
 
-    async def update_trade_current_offer(self, trade):
+    async def update_trade_current_offer(self, trade, new_offer_price, new_offer_quantity):
         if trade.status == 'WTB':
-            best_offer = await database_sync_to_async(self.get_best_offer)(trade, 'offer_price')
-        elif trade.status == 'WTS':
-            best_offer = await database_sync_to_async(self.get_best_offer)(trade, '-offer_price')
+            if trade.current_offer is None or new_offer_price < trade.current_offer:
+                trade.current_offer = new_offer_price
+                trade.current_quantity = new_offer_quantity
 
-        if best_offer:
-            trade.current_offer = best_offer.offer_price
-            trade.current_quantity = best_offer.offer_quantity
-        else:
-            trade.current_offer = None
-            trade.current_quantity = 0
+        elif trade.status == 'WTS':
+            if trade.current_offer is None or new_offer_price > trade.current_offer:
+                trade.current_offer = new_offer_price
+                trade.current_quantity = new_offer_quantity
+
         await database_sync_to_async(trade.save)()
 
     async def create_trade(self, data, creator_email):
@@ -155,5 +142,4 @@ class TradeConsumer(AsyncWebsocketConsumer):
             'trade': trade_info
         }))
 
-    def get_best_offer(self, trade, order):
-        return Offer.objects.filter(trade=trade).order_by(order).first()
+

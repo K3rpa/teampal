@@ -63,6 +63,7 @@ class Trade(models.Model):
     current_offer = models.FloatField()
     current_quantity = models.IntegerField(default=0)
     creator = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    
 
     def __str__(self):
         return f"{self.item_name} ({self.status})"
