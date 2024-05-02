@@ -5,9 +5,7 @@ from django.contrib.auth import get_user_model
 import json
 import logging
 from .models import Trade, Offer
-
 logger = logging.getLogger(__name__)
-
 class TradeConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_group_name = "trade_search"
@@ -15,14 +13,12 @@ class TradeConsumer(AsyncWebsocketConsumer):
         await self.accept()
         trades = await self.get_trades()
         await self.send(text_data=json.dumps({"type": "all_trades", "trades": trades}))
-
     @database_sync_to_async
     def get_trades(self):
         return list(Trade.objects.values(
             'id', 'game_name', 'item_name', 'description', 'status', 
             'quantity', 'expected_price', 'current_offer', 'current_quantity', 'creator__email'
         ))
-
     @database_sync_to_async
     def get_trade_offers(self, trade_id):
         offers = Offer.objects.filter(trade_id=trade_id).order_by('-created_at').values(
@@ -33,15 +29,12 @@ class TradeConsumer(AsyncWebsocketConsumer):
             'offer_price': offer['offer_price'],
             'offer_quantity': offer['offer_quantity']
         } for offer in offers]
-
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
     async def receive(self, text_data):
         logger.info(f"Received message: {text_data}")
         text_data_json = json.loads(text_data)
         User = get_user_model()
-
         if text_data_json.get("type") == "fetch_trades":
             trades = await self.get_trades()
             await self.send(text_data=json.dumps({"type": "all_trades", "trades": trades}))
@@ -74,6 +67,9 @@ class TradeConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error when trying to cancel trade {trade_id}: {e}")
 
+
+
+
     async def create_or_update_offer(self, item_name, email, offer_price, offer_quantity):
         User = get_user_model()
         user = await database_sync_to_async(User.objects.get)(email=email)
@@ -85,9 +81,19 @@ class TradeConsumer(AsyncWebsocketConsumer):
                 defaults={'offer_price': offer_price, 'offer_quantity': offer_quantity}
             )
             logger.info(f"Processing new offer for trade {trade.id}: {offer_price} offered by {email}")
+            if trade.status == 'WTB' and (trade.current_offer is None or offer_price < trade.current_offer):
+                trade.current_offer = offer_price
+                trade.current_quantity = offer_quantity
+            elif trade.status == 'WTS' and (trade.current_offer is None or offer_price > trade.current_offer):
+                trade.current_offer = offer_price
+                trade.current_quantity = offer_quantity
+            ##await database_sync_to_async(trade.save)()
             await self.update_trade_current_offer(trade, offer_price, offer_quantity)
         except Trade.DoesNotExist:
             logger.error(f"No trade found with item_name {item_name}.")
+
+
+
 
     async def update_trade_current_offer(self, trade, new_offer_price, new_offer_quantity):
         if trade.status == 'WTB':
@@ -101,7 +107,18 @@ class TradeConsumer(AsyncWebsocketConsumer):
                 trade.current_quantity = new_offer_quantity
 
         await database_sync_to_async(trade.save)()
-
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "trade.update",
+                "trade": {
+                    'id': trade.id,
+                    'current_offer': trade.current_offer,
+                    'current_quantity': trade.current_quantity,
+                }
+            }
+        )
+    
     async def create_trade(self, data, creator_email):
         User = get_user_model()
         creator = await database_sync_to_async(User.objects.get)(email=creator_email)
@@ -134,7 +151,6 @@ class TradeConsumer(AsyncWebsocketConsumer):
                 }
             }
         )
-
     async def trade_message(self, event):
         trade_info = event['trade']
         await self.send(text_data=json.dumps({
@@ -142,4 +158,9 @@ class TradeConsumer(AsyncWebsocketConsumer):
             'trade': trade_info
         }))
 
-
+    async def trade_update(self, event):
+        trade_info = event['trade']
+        await self.send(text_data=json.dumps({
+            'type': 'trade.update',
+            'trade': trade_info
+        }))

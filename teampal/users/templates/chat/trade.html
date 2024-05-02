@@ -72,7 +72,6 @@
         var currentUserEmail = '{{ user.email }}'; 
         const container = document.getElementById('info-container');
         let trades = [];
-
         let websocket = new WebSocket('ws://localhost:8000/ws/trade_search/');
         websocket.onopen = function() {
             console.log('WebSocket connection established');
@@ -96,6 +95,9 @@
                 console.log("Offers received:", data.offers);
                 updateOffersDisplay(data.offers);
             }
+            else if (data.type === 'trade.update') {
+                updateTradeDisplay(data);
+            }
         };
 
         function displayTrades(filteredTrades) {
@@ -110,23 +112,17 @@
                     <p>Status: ${trade.status}</p>
                     <p>Quantity: ${trade.quantity}</p>
                     <p>Expected Price: ${trade.expected_price}</p>
-                    <p>Current Offer: ${trade.current_offer}</p>
-                    <p>Current Quantity: ${trade.current_quantity}</p>
-                    <button class="offer-button" onclick="makeOffer(${trade.item_name})">Make Offer</button>
+                    <button class="offer-button" onclick="makeOffer('${trade.item_name}')">Make Offer</button>
                     <button class="history-button" onclick="fetchHistory(${trade.id})">Check History</button>
-                    #${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
                     ${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
-
                 `;
                 container.appendChild(infoBox);
             });
         }
-
         function fetchHistory(tradeId) {
             console.log("Fetching history for trade:", tradeId);
             websocket.send(JSON.stringify({type: "fetch_offers", trade_id: tradeId}));
         }
-
         function filterTrades() {
             const filterValue = document.getElementById('filter-input').value.toLowerCase();
             const filteredTrades = trades.filter(trade => 
@@ -134,7 +130,6 @@
                 trade.game_name.toLowerCase().includes(filterValue));
             displayTrades(filteredTrades);
         }
-
         function createTrade() {
             const gameName = prompt("Enter the game name:");
             const itemName = prompt("Enter the item name:");
@@ -142,9 +137,7 @@
             const status = prompt("Enter status (WTB or WTS):");
             const quantity = parseInt(prompt("Enter the quantity:"), 10);
             const expectedPrice = parseFloat(prompt("Enter the expected price(total):"));
-
             console.log("Data to send:", gameName, itemName, description, status, quantity, expectedPrice);
-
             if (gameName && itemName && description && status && quantity && expectedPrice) {
                 const tradeData = {
                     type: "create_trade",
@@ -162,7 +155,6 @@
                 alert("All fields must be filled out correctly.");
             }       
         }
-
         function cancelTrade(index) {
             const tradeId = trades[index].id;
             console.log("Cancelling trade with ID:", tradeId);
@@ -170,7 +162,6 @@
             trades.splice(index, 1);
             displayTrades(trades);
         }
-
         function fetchTrades() {
             console.log("Fetching trades");
             websocket.send(JSON.stringify({type: "fetch_trades"}));
@@ -219,10 +210,16 @@
             } else {
                 alert("Invalid input. Please enter valid numbers.");
             }
+        }      
+        
+        function updateTradeDisplay(data) {
+            const currentOfferElement = document.getElementById(`offer-${data.trade_id}`);
+            const currentQuantityElement = document.getElementById(`quantity-${data.trade_id}`);
+            if (currentOfferElement && currentQuantityElement) {
+                currentOfferElement.textContent = data.current_offer;
+                currentQuantityElement.textContent = data.current_quantity;
+            }
         }
-   
-
-
     </script>
 </body>
 </html>
