@@ -85,6 +85,18 @@ class TradeConsumer(AsyncWebsocketConsumer):
                 user=user,
                 defaults={'offer_price': offer_price, 'offer_quantity': offer_quantity}
             )
+            logger.info(f"Processing new offer for trade {trade.id}: {offer_price} offered by {email}")
+            #if trade.status == 'WTB' and (trade.current_offer is None or offer_price < trade.current_offer):
+            #    logger.info(f"Updating WTB trade {trade.id}: New best offer {offer_price} is lower than current {trade.current_offer}")
+#
+            #    trade.current_offer = offer_price
+            #    trade.current_quantity = offer_quantity
+            #elif trade.status == 'WTS' and (trade.current_offer is None or offer_price > trade.current_offer):
+            #    logger.info(f"Updating WTS trade {trade.id}: New best offer {offer_price} is higher than current {trade.current_offer}")
+#
+            #    trade.current_offer = offer_price
+            #    trade.current_quantity = offer_quantity
+            #await database_sync_to_async(trade.save)()
             await self.update_trade_current_offer(trade)
         except Trade.DoesNotExist:
             logger.error(f"No trade found with item_name {item_name}.")

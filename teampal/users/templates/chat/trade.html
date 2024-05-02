@@ -59,6 +59,14 @@
     </div>
     <div id="info-container"></div>
     <button class="create-button" onclick="createTrade()">Create Trade</button>
+    <div id="historyModal" style="display:none; position:fixed; z-index:1; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgb(0,0,0,0.4);">
+        <div style="background-color:#fefefe; margin:25% auto; padding:20px; border:1px solid #888; width:50%; max-width:600px;">
+            <span onclick="closeHistoryModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
+            <h2>Offer History</h2>
+            <div id="offers-container" style="max-height:300px; overflow-y:auto;">
+            </div>
+        </div>
+    </div>
 
     <script>
         var currentUserEmail = '{{ user.email }}'; 
@@ -83,6 +91,10 @@
                 console.log("New trade received:", data.trade);
                 trades.push(data.trade);
                 displayTrades(trades);
+            }
+            else if (data.type === 'trade_offers') {
+                console.log("Offers received:", data.offers);
+                updateOffersDisplay(data.offers);
             }
         };
 
@@ -161,6 +173,36 @@
             console.log("Fetching trades");
             websocket.send(JSON.stringify({type: "fetch_trades"}));
         }
+
+        function updateOffersDisplay(offers) {
+            console.log("Updating offers display with:", offers);
+            const offersContainer = document.getElementById('offers-container');
+            offersContainer.innerHTML = '';
+
+            offers.forEach(offer => {
+                const offerDiv = document.createElement('div');
+                offerDiv.className = 'offer';
+                offerDiv.innerHTML = `
+                    <p>User: ${offer.user_username}</p>
+                    <p>Price: ${offer.offer_price}</p>
+                    <p>Quantity: ${offer.offer_quantity}</p>
+                `;
+                offersContainer.appendChild(offerDiv);
+            });
+
+            if (offers.length === 0) {
+                offersContainer.innerHTML = '<p>No offers available.</p>';
+            }
+            showHistoryModal(); 
+        }
+        function showHistoryModal() {
+            document.getElementById('historyModal').style.display = "block";
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').style.display = "none";
+        }
+
         function makeOffer(itemName) {
             const offerPrice = parseFloat(prompt("Enter your offer price:"));
             const offerQuantity = parseInt(prompt("Enter your offer quantity:"), 10);
