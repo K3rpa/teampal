@@ -45,19 +45,24 @@ class TourConsumer(AsyncWebsocketConsumer):
             logger.info("Creating tournament with data: " + str(text_data_json))
             await self.create_tournament(text_data_json)
         elif text_data_json.get("type") == "toggle_interest":
-            await self.toggle_interest(text_data_json.get("name"))
+            tournament = await self.toggle_interest(text_data_json['name'])
+            if tournament:
+                await self.send_tournament_update({
+                'name': tournament.name,
+                'interest_count': tournament.interest_count
+            })
+            #await self.toggle_interest(text_data_json.get("name"))
         elif text_data_json.get("type") == "cancel_tournament":
             await self.cancel_tournament(text_data_json.get("name"))
 
-    @database_sync_to_async
-    def create_tournament(self, data):
+    async def create_tournament(self, data):
         User = get_user_model()
         creator_email = data['creator']
-        creator = User.objects.get(email=creator_email)
+        creator = await database_sync_to_async(User.objects.get)(email=creator_email)
 
         try:
             logger.info(f"Attempting to create tournament with data: {data}")
-            tournament = TournamentPost.objects.create(
+            tournament = await database_sync_to_async(TournamentPost.objects.create)(
                 name=data['name'],
                 game=data['game'],
                 date=data['date'],
@@ -70,6 +75,20 @@ class TourConsumer(AsyncWebsocketConsumer):
                 creator=creator  
             )
             logger.info(f"Tournament created: {tournament}")
+            tournament_data = {
+            "name": tournament.name,
+            "description": tournament.description,
+            "game": tournament.game,
+            "date": tournament.date,
+            "team_count": tournament.team_count,
+            "prize": tournament.prize,
+            "interest_count": tournament.interest_count,
+            "website": tournament.website,
+            "contact": tournament.contact,
+            "creator_email": creator_email  # make sure to include email or identifier
+            }
+            await self.send_tournament_update(tournament_data)
+
         except Exception as e:
             logger.error(f"An error occurred while creating the tournament: {e}")
 
@@ -89,12 +108,19 @@ class TourConsumer(AsyncWebsocketConsumer):
         try:
             tournament = TournamentPost.objects.get(name=name)
             tournament.interest_count = F('interest_count') + 1
-            tournament.save()
+            tournament.save(update_fields=['interest_count'])
+            tournament.refresh_from_db()
             logger.info(f"Interest toggled for tournament {name}.")
+
+            return tournament
+
         except TournamentPost.DoesNotExist:
             logger.error(f"Tournament with name {name} does not exist.")
+            return None
+
         except Exception as e:
             logger.error(f"Error when trying to toggle interest for tournament {name}: {e}")
+            return None
 
     async def tournament_update(self, event):
         await self.send(text_data=json.dumps({
@@ -128,6 +154,8 @@ class TourConsumer(AsyncWebsocketConsumer):
                 'tournament': tournament_data
             }
         )
+        logger.info(f"Sent update for tournament: {tournament_data}")  # 添加日志
+
 
     async def fetch_tournaments(self):
         tournaments = await database_sync_to_async(self.get_tournaments)()
@@ -135,5 +163,3 @@ class TourConsumer(AsyncWebsocketConsumer):
             "type": "all_tournaments",
             "tournaments": json.loads(tournaments)
         }))
-
-

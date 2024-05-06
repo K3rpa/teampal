@@ -65,7 +65,7 @@
     <div id="filter-container">
         <input type="text" id="filter-input" placeholder="Search by Team Name or Game">
         <button class="filter-button" onclick="filterTournaments()">Filter</button>
-        <button onclick="fetchTournaments()">Refresh Tournaments</button>
+        <!--<button onclick="fetchTournaments()">Refresh Tournaments</button>-->
 
     </div>
     <div id="info-container"></div> 
@@ -94,7 +94,6 @@
                 displayTournaments(tournaments);
             } else if (data.type === 'tournament.message') {
                 console.log("Handling 'tournament.message' with new tournament:", data.tournament);
-                //tournaments.push(data.tournament);
                 updateTournament(data.tournament);
                 displayTournaments(tournaments);            }
             else if (data.type === 'tournament.update') {
@@ -193,8 +192,10 @@
             const index = tournaments.findIndex(tournament => tournament.name === updatedTournament.name);
             if (index !== -1) {
                 tournaments[index] = {...tournaments[index], ...updatedTournament};
+                console.log("Updated tournament:", tournaments[index]);
             } else {
                 tournaments.push(updatedTournament);
+                console.log("Added new tournament:", updatedTournament);
             }
         }
 
