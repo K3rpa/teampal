@@ -25,6 +25,7 @@ urlpatterns = [
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
     path('chat/<str:room_name>/', views.room, name='room'),
     #----------------dashboard---------------------------------
+    path('apex/apex_general_chat/', views.apex_general_chat, name='apex.apex_general_chat'),
 
 
 

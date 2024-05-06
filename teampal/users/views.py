@@ -203,3 +203,5 @@ def tournament(request):
 def team_search(request):
     return render(request, 'chat/team_search.html')
 
+def apex_general_chat(request):
+    return render(request, 'chat/room2.html', {'room_name': 'apex_general_chat'})
