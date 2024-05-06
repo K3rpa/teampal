@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 import json
 from django.core.exceptions import ObjectDoesNotExist
-from .models import TournamentPost
+from .models import TournamentInterest, TournamentPost
 import logging
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F
@@ -45,13 +45,12 @@ class TourConsumer(AsyncWebsocketConsumer):
             logger.info("Creating tournament with data: " + str(text_data_json))
             await self.create_tournament(text_data_json)
         elif text_data_json.get("type") == "toggle_interest":
-            tournament = await self.toggle_interest(text_data_json['name'])
+            tournament = await self.toggle_interest(text_data_json['userEmail'], text_data_json['name'])
             if tournament:
                 await self.send_tournament_update({
                 'name': tournament.name,
                 'interest_count': tournament.interest_count
             })
-            #await self.toggle_interest(text_data_json.get("name"))
         elif text_data_json.get("type") == "cancel_tournament":
             await self.cancel_tournament(text_data_json.get("name"))
 
@@ -85,7 +84,7 @@ class TourConsumer(AsyncWebsocketConsumer):
             "interest_count": tournament.interest_count,
             "website": tournament.website,
             "contact": tournament.contact,
-            "creator_email": creator_email  # make sure to include email or identifier
+            "creator_email": creator_email 
             }
             await self.send_tournament_update(tournament_data)
 
@@ -104,23 +103,37 @@ class TourConsumer(AsyncWebsocketConsumer):
             logger.error(f"Error when trying to cancel tournament {name}: {e}")
 
     @database_sync_to_async
-    def toggle_interest(self, name):
+    def toggle_interest(self, user_email, tournament_name):
+        User = get_user_model()
         try:
-            tournament = TournamentPost.objects.get(name=name)
-            tournament.interest_count = F('interest_count') + 1
+            user = User.objects.get(email=user_email)
+            tournament = TournamentPost.objects.get(name=tournament_name)
+            obj, created = TournamentInterest.objects.get_or_create(
+                user=user,
+                tournament=tournament,
+                defaults={'is_interested': True}
+            )
+            if not created:
+                obj.is_interested = not obj.is_interested
+                obj.save()
+
+            # 更新兴趣计数
+            current_interest_count = TournamentInterest.objects.filter(
+                tournament=tournament, is_interested=True).count()
+            tournament.interest_count = current_interest_count
             tournament.save(update_fields=['interest_count'])
-            tournament.refresh_from_db()
-            logger.info(f"Interest toggled for tournament {name}.")
-
             return tournament
-
+        except User.DoesNotExist:
+            logger.error(f"No user found with email {user_email}.")
+            return None
         except TournamentPost.DoesNotExist:
-            logger.error(f"Tournament with name {name} does not exist.")
+            logger.error(f"Tournament with name {tournament_name} does not exist.")
+            return None
+        except Exception as e:
+            logger.error(f"Error when trying to toggle interest for tournament {tournament_name} by user {user_email}: {e}")
             return None
 
-        except Exception as e:
-            logger.error(f"Error when trying to toggle interest for tournament {name}: {e}")
-            return None
+
 
     async def tournament_update(self, event):
         await self.send(text_data=json.dumps({
@@ -154,7 +167,7 @@ class TourConsumer(AsyncWebsocketConsumer):
                 'tournament': tournament_data
             }
         )
-        logger.info(f"Sent update for tournament: {tournament_data}")  # 添加日志
+        logger.info(f"Sent update for tournament: {tournament_data}")
 
 
     async def fetch_tournaments(self):

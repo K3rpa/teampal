@@ -92,3 +92,11 @@ class TournamentPost(models.Model):
 
     def __str__(self):
         return self.name
+
+class TournamentInterest(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    tournament = models.ForeignKey(TournamentPost, on_delete=models.CASCADE)
+    is_interested = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('user', 'tournament')

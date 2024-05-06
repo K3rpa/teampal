@@ -185,7 +185,11 @@
 
         function toggleInterest(index) {
             const tournament = tournaments[index];
-            websocket.send(JSON.stringify({ type: "toggle_interest", name: tournament.name }));
+            websocket.send(JSON.stringify({
+                type: "toggle_interest",
+                name: tournament.name,
+                userEmail: currentUserEmail
+            }));
         }
 
         function updateTournament(updatedTournament) {
