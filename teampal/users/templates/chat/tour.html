@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Team Search</title>
+    <style>
+        .info-box {
+            width: 300px;
+            height: 350px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            position: relative;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .create-button, .cancel-button, .filter-button, .interest-button, .website-button, .contact-button {
+            padding: 5px 8px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .interest-button {
+            background-color: #008CBA;
+            position: absolute;
+            bottom: 60px;
+            left: 10px;
+        }
+        .website-button {
+            background-color: #6a5acd;
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+        }
+        .contact-button {
+            background-color: #44d844;
+            position: absolute;
+            bottom: 0px;
+            left: 10px;
+        }
+        .cancel-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #f44336; 
+        }
+        .create-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #008CBA;
+        }
+        .filter-button {
+            background-color: #4CAF50;
+        }
+        #filter-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="filter-container">
+        <input type="text" id="filter-input" placeholder="Search by Team Name or Game">
+        <button class="filter-button" onclick="filterTournaments()">Filter</button>
+        <button onclick="fetchTournaments()">Refresh Tournaments</button>
+
+    </div>
+    <div id="info-container"></div> 
+    <button class="create-button" onclick="createTournament()">Create Tournaments</button>
+
+    <script>
+        var currentUserEmail = '{{ user.email }}';
+        const container = document.getElementById('info-container');
+        let tournaments = [];
+    
+        let websocket = new WebSocket('ws://localhost:8000/ws/tournaments/');
+        websocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+        websocket.onerror = function(event) {
+            console.error('WebSocket error observed:', event);
+        };
+
+        websocket.onmessage = function(event) {
+            console.log("Message received:", event.data);
+            const data = JSON.parse(event.data);
+            console.log("Parsed data:", data);
+            if (data.type === 'all_tournaments') {
+                console.log("Handling 'all_tournaments' message with data:", data.tournaments);
+                tournaments = data.tournaments;
+                displayTournaments(tournaments);
+            } else if (data.type === 'tournament.message') {
+                console.log("Handling 'tournament.message' with new tournament:", data.tournament);
+                //tournaments.push(data.tournament);
+                updateTournament(data.tournament);
+                displayTournaments(tournaments);            }
+            else if (data.type === 'tournament.update') {
+                console.log("Handling 'tournament.update' with updated tournament:", data.tournament);
+                updateTournament(data.tournament);
+                displayTournaments(tournaments);
+            }
+        };
+    
+        function displayTournaments(tournaments) {
+            console.log("Called displayTournaments function");
+            container.innerHTML = '';
+            tournaments.forEach((tournament, index) => {
+                const infoBox = document.createElement('div');
+                infoBox.className = 'info-box';
+                infoBox.innerHTML = `
+                    <h3>${tournament.name}</h3>
+                    <p>Game: ${tournament.game}</p>
+                    <p>Date: ${tournament.date}</p>
+                    <p>Description: ${tournament.description}</p>
+                    <p>Teams: ${tournament.team_count}</p>
+                    <p>Prize: ${tournament.prize}</p>
+                    <p>Interest: ${tournament.interest_count}</p>
+                    <button class="interest-button" onclick="toggleInterest(${index})">Toggle Interest</button>
+                    <button class="website-button" onclick="window.open('${tournament.website}', '_blank')">Visit Website</button>
+                    <button class="contact-button" onclick="alert('Contact: ${tournament.contact}')">Contact</button>
+                    ${tournament.creator_email  === currentUserEmail ? `<button class="cancel-button" onclick="cancelTournament(${index})">Cancel</button>` : ''}
+                `;
+                console.log("Cancel Button Condition:", tournament.creator === currentUserEmail);
+                console.log("Current User Email:", currentUserEmail);
+                console.log("Tournament Creator:", tournament.creator);
+                container.appendChild(infoBox);
+            });
+        }
+    
+        function filterTournaments() {
+            const filterValue = document.getElementById('filter-input').value.toLowerCase();
+            const filteredTeams = teams.filter(team => 
+                team.name.toLowerCase().includes(filterValue) || 
+                team.game.toLowerCase().includes(filterValue));
+                displayTournaments(filteredTeams);
+        }
+    
+        function createTournament() {
+            const tournamentName = prompt("Enter tournament name:");
+            const description = prompt("Enter tournament description:");
+            const game = prompt("Enter game:");
+            const date = prompt("Enter date (YYYY-MM-DD):");
+            const teamCount = prompt("Enter number of teams:");
+            const prize = prompt("Enter prize:");
+            const contact = prompt("Enter contact information:");
+            const website = prompt("Enter website URL (optional):");
+
+            console.log("Received input from user:", {
+                tournamentName, description, game, date, teamCount, prize, contact, website
+            });
+            if (tournamentName && description && game && date && teamCount && prize && contact) {
+                const tournamentData = {
+                    type: "create_tournament",
+                    name: tournamentName,
+                    description: description,
+                    game: game,
+                    date: date,
+                    team_count: parseInt(teamCount),
+                    prize: prize,
+                    contact: contact,
+                    website: website || '',  // Provide an empty string if no URL is entered
+                    creator: currentUserEmail
+                };
+                console.log("Sending tournament data to server:", tournamentData);
+                websocket.send(JSON.stringify(tournamentData)); 
+            } else {
+                alert('Please fill all required fields.');
+                console.log("Failed to send data: Missing required fields");
+            }
+        }
+
+    
+        function cancelTournament(index) {
+            const tournament = tournaments[index];
+            websocket.send(JSON.stringify({ type: "cancel_tournament", name: tournament.name }));
+            tournaments.splice(index, 1);
+            displayTournaments(tournaments);
+        }
+
+        function fetchTournaments() {
+            websocket.send(JSON.stringify({ type: "fetch_tournaments" }));
+        }
+
+        function toggleInterest(index) {
+            const tournament = tournaments[index];
+            websocket.send(JSON.stringify({ type: "toggle_interest", name: tournament.name }));
+        }
+
+        function updateTournament(updatedTournament) {
+            const index = tournaments.findIndex(tournament => tournament.name === updatedTournament.name);
+            if (index !== -1) {
+                tournaments[index] = {...tournaments[index], ...updatedTournament};
+            } else {
+                tournaments.push(updatedTournament);
+            }
+        }
+
+    </script>
+    
+</body>
+</html>

@@ -6,6 +6,8 @@ import json
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Team
 import logging
+from django.core.serializers.json import DjangoJSONEncoder
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,8 @@ class TeamSearchConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
+        logger.info(f"Received data from client: {text_data}")
+
         if text_data_json.get("type") == "fetch_teams":
             teams = await self.get_teams()
             await self.send(text_data=json.dumps({"type": "all_teams", "teams": teams}))

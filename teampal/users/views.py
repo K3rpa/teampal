@@ -198,7 +198,7 @@ def trade(request):
     return render(request, 'chat/trade.html')
 
 def tournament(request):
-    return render(request, 'chat/room2.html', {'room_name': 'tournament'})
+    return render(request, 'chat/tour.html')
 
 def team_search(request):
     return render(request, 'chat/team_search.html')

@@ -77,3 +77,18 @@ class Offer(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+
+class TournamentPost(models.Model):
+    name = models.CharField(max_length=255)
+    game = models.CharField(max_length=255, null=True)
+    date = models.DateField()
+    description = models.TextField()
+    team_count = models.IntegerField()
+    prize = models.CharField(max_length=100)
+    interest_count = models.IntegerField(default=0)
+    website = models.URLField(blank=True, null=True)
+    contact = models.CharField(max_length=255)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
