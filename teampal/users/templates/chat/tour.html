@@ -10,7 +10,7 @@
             border: 1px solid #ccc;
             margin-bottom: 20px;
             position: relative;
-            padding: 20px;
+            padding: 50px;
             background-color: #f9f9f9;
         }
         .create-button, .cancel-button, .filter-button, .interest-button, .website-button, .contact-button {
@@ -117,7 +117,7 @@
                     <p>Teams: ${tournament.team_count}</p>
                     <p>Prize: ${tournament.prize}</p>
                     <p>Interest: ${tournament.interest_count}</p>
-                    <button class="interest-button" onclick="toggleInterest(${index})">Toggle Interest</button>
+                    <button class="interest-button" onclick="toggleInterest(${index})">Interest</button>
                     <button class="website-button" onclick="window.open('${tournament.website}', '_blank')">Visit Website</button>
                     <button class="contact-button" onclick="alert('Contact: ${tournament.contact}')">Contact</button>
                     ${tournament.creator_email  === currentUserEmail ? `<button class="cancel-button" onclick="cancelTournament(${index})">Cancel</button>` : ''}
@@ -130,12 +130,16 @@
         }
     
         function filterTournaments() {
+            console.log("Filter button clicked");
             const filterValue = document.getElementById('filter-input').value.toLowerCase();
-            const filteredTeams = teams.filter(team => 
-                team.name.toLowerCase().includes(filterValue) || 
-                team.game.toLowerCase().includes(filterValue));
-                displayTournaments(filteredTeams);
+            console.log("Filter value:", filterValue);
+            const filteredTournaments = tournaments.filter(tournament => 
+                tournament.name.toLowerCase().includes(filterValue) || 
+                tournament.game.toLowerCase().includes(filterValue));
+            console.log("Filtered tournaments:", filteredTournaments);
+            displayTournaments(filteredTournaments);
         }
+
     
         function createTournament() {
             const tournamentName = prompt("Enter tournament name:");
@@ -160,7 +164,7 @@
                     team_count: parseInt(teamCount),
                     prize: prize,
                     contact: contact,
-                    website: website || '',  // Provide an empty string if no URL is entered
+                    website: website || '', 
                     creator: currentUserEmail
                 };
                 console.log("Sending tournament data to server:", tournamentData);

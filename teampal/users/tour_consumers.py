@@ -117,7 +117,6 @@ class TourConsumer(AsyncWebsocketConsumer):
                 obj.is_interested = not obj.is_interested
                 obj.save()
 
-            # 更新兴趣计数
             current_interest_count = TournamentInterest.objects.filter(
                 tournament=tournament, is_interested=True).count()
             tournament.interest_count = current_interest_count
