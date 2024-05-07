@@ -31,17 +31,17 @@ urlpatterns = [
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
     #-----------------apex end---------------------------------
     path('cs2/cs2_general_chat/', views.cs2_general_chat, name='cs2_general_chat'),
-    path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
+    path('cs2/team_search/', views.cs2_team_search, name='cs2.team_search'),
     path('dashboard/trade/', views.trade, name='dashboard.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
     #------------------cs2 end----------------------------------    
     path('lol/lol_general_chat/', views.lol_general_chat, name='lol_general_chat'),
-    path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
+    path('lol/team_search/', views.lol_team_search, name='lol.team_search'),
     path('dashboard/trade/', views.trade, name='dashboard.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
     #-------------------lol end-----------------------------------
     path('valorant/valorant_general_chat/', views.valorant_general_chat, name='valorant_general_chat'),
-    path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
+    path('valorant/team_search/', views.valorant_team_search, name='valorant.team_search'),
     path('dashboard/trade/', views.trade, name='dashboard.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
     #-------------------valorant end------------------------------
