@@ -26,6 +26,26 @@ urlpatterns = [
     path('chat/<str:room_name>/', views.room, name='room'),
     #----------------dashboard---------------------------------
     path('apex/apex_general_chat/', views.apex_general_chat, name='apex.apex_general_chat'),
+    path('apex/team_search/', views.apex_team_search, name='apex.team_search'),
+    path('dashboard/trade/', views.trade, name='dashboard.trade'),
+    path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    #-----------------apex end---------------------------------
+    path('cs2/cs2_general_chat/', views.cs2_general_chat, name='cs2_general_chat'),
+    path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
+    path('dashboard/trade/', views.trade, name='dashboard.trade'),
+    path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    #------------------cs2 end----------------------------------    
+    path('lol/lol_general_chat/', views.lol_general_chat, name='lol_general_chat'),
+    path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
+    path('dashboard/trade/', views.trade, name='dashboard.trade'),
+    path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    #-------------------lol end-----------------------------------
+    path('valorant/valorant_general_chat/', views.valorant_general_chat, name='valorant_general_chat'),
+    path('dashboard/team_search/', views.team_search, name='dashboard.team_search'),
+    path('dashboard/trade/', views.trade, name='dashboard.trade'),
+    path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    #-------------------valorant end------------------------------
+
 
 
 

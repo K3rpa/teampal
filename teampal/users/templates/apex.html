@@ -112,15 +112,15 @@
 
     <div class="sidebar">
         <button onclick="loadChatRoom('apex_general_chat', '/apex/apex_general_chat/')">General Chat</button>
-        <button onclick="loadChatRoom('team_search', '/dashboard/team_search/')">Team Search</button>
+        <button onclick="loadChatRoom('apex_team_search', '/apex/team_search/')">Team Search</button>
         <button onclick="loadChatRoom('trade', '/dashboard/trade/')">Trade</button>
         <button onclick="loadChatRoom('tournament', '/dashboard/tournament/')">Tournament</button>       
     </div>
     
     
     <div id="chatrooms" class="chat-rooms">
-        <div id="general_chat" class="chatroom">General Chat content...</div>
-        <div id="team_search" class="chatroom" style="display:none;">Team Search content...</div>
+        <div id="apex_general_chat" class="chatroom">General Chat content...</div>
+        <div id="apex_team_search" class="chatroom" style="display:none;">Team Search content...</div>
         <div id="trade" class="chatroom" style="display:none;">Trade content...</div>
         <div id="tournament" class="chatroom" style="display:none;">Tournament content...</div>
     </div>
@@ -183,10 +183,13 @@ function loadChatRoom(roomId, url) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        console.log('Received response:', response);
         return response.text();
     })
     .then(html => {
+        console.log('Received HTML:', html);
         const roomDiv = document.getElementById(roomId);
+        console.log('Room div:', roomDiv);
         roomDiv.innerHTML = html;
         roomDiv.style.display = 'block'; 
 

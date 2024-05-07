@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Team Search</title>
+    <style>
+        .info-box {
+            width: 300px;
+            height: 300px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            position: relative;
+            padding: 20px;
+            background-color: #f9f9f9;
+
+        }
+        .join-button, .create-button, .cancel-button, .filter-button {
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .join-button {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: #4CAF50;
+        }
+        .cancel-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #f44336; 
+        }
+        .create-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #008CBA;
+        }
+        .filter-button {
+            background-color: #4CAF50;
+        }
+        #filter-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="filter-container">
+        <input type="text" id="filter-input" placeholder="Search by Team Name or Game">
+        <button class="filter-button" onclick="filterTeams()">Filter</button>
+        <!--<button onclick="fetchTeams()">Refresh Teams</button>-->
+
+    </div>
+    <div id="info-container"></div> 
+    <button class="create-button" onclick="createTeam()">Create Team</button>
+
+    <script>
+        var currentUserEmail = '{{ user.email }}';
+        const container = document.getElementById('info-container');
+        let teams = [];
+    
+        let websocket = new WebSocket('ws://localhost:8000/ws/apex_team_search/');
+        websocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+        websocket.onerror = function(event) {
+            console.error('WebSocket error observed:', event);
+        };
+        websocket.onmessage = function(event) {
+            console.log("Message received:", event.data);
+            const data = JSON.parse(event.data);
+            console.log("Parsed data:", data);
+            if (data.type === 'all_teams') {
+                teams = data.teams;
+                displayTeams(teams);
+            } else if (data.type === 'team.message') {
+                teams.push(data.team);
+                displayTeams(teams);
+            }
+        };
+    
+        function displayTeams(filteredTeams) {
+            container.innerHTML = ''; 
+            filteredTeams.forEach((team, index) => {
+                const infoBox = document.createElement('div');
+                infoBox.className = 'info-box';
+                infoBox.innerHTML = `
+                    <h3>Team Name: ${team.name}</h3>
+                    <p>Description: ${team.description}</p>
+                    <p>Game: ${team.game}</p>
+                    <p>Members Needed: ${team.members_needed}</p>
+                    <button class="join-button" onclick="alert('Contact: ${team.contact}')">Join Request</button>
+                   ${team.creator && team.creator === currentUserEmail ? `<button class="cancel-button" onclick="cancelTeam(${index})">Cancel</button>` : ''}
+                `;
+                if (!team.name || !team.description || !team.game || typeof team.members_needed === 'undefined' || !team.contact) {
+                    console.error("Invalid team data", team);
+                } else {
+                    container.appendChild(infoBox);
+                }
+
+            });
+        }
+    
+        function filterTeams() {
+            const filterValue = document.getElementById('filter-input').value.toLowerCase();
+            const filteredTeams = teams.filter(team => 
+                team.name.toLowerCase().includes(filterValue) || 
+                team.game.toLowerCase().includes(filterValue));
+            displayTeams(filteredTeams);
+        }
+    
+        function createTeam() {
+            const teamName = prompt("Enter team name:");
+            const description = prompt("Enter team description:");
+            const game = prompt("Enter game:");
+            const members_needed = prompt("Enter number of members needed:");
+            const contact = prompt("Enter contact information:");
+            if (teamName && description && game && members_needed && contact) {
+                const teamData = { name: teamName, description: description, game: game, members_needed: parseInt(members_needed), contact: contact, creator: currentUserEmail };
+                websocket.send(JSON.stringify(teamData)); 
+            }
+        }
+    
+        function cancelTeam(index) {
+            const teamName = teams[index].name;
+            websocket.send(JSON.stringify({ type: "cancel_team", name: teamName }));
+            teams.splice(index, 1); 
+            displayTeams(teams); 
+        }
+        function fetchTeams() {
+            console.log("Fetching teams");
+            websocket.send(JSON.stringify({type: "fetch_teams"})); 
+        }
+    </script>
+    
+</body>
+</html>

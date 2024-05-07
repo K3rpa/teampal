@@ -205,3 +205,18 @@ def team_search(request):
 
 def apex_general_chat(request):
     return render(request, 'chat/room2.html', {'room_name': 'apex_general_chat'})
+
+def apex_trade(request):
+    return render(request, 'chat/apex_trade.html')
+
+def apex_team_search(request):
+    return render(request, 'chat/apex_team_search.html')
+
+def cs2_general_chat(request):
+    return render(request, 'chat/room2.html', {'room_name': 'cs2_general_chat'})
+
+def lol_general_chat(request):
+    return render(request, 'chat/room2.html', {'room_name': 'lol_general_chat'})
+
+def valorant_general_chat(request):
+    return render(request, 'chat/room2.html', {'room_name': 'valorant_general_chat'})

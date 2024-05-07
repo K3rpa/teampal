@@ -52,6 +52,14 @@ class Team(models.Model):
     contact = models.CharField(max_length=100)
     creator = models.CharField(max_length=255, null=True, blank=True)
 
+class Apex_Team(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    game = models.CharField(max_length=100)
+    members_needed = models.IntegerField()
+    contact = models.CharField(max_length=100)
+    creator = models.CharField(max_length=255, null=True, blank=True)
+
 
 class Trade(models.Model):
     game_name = models.CharField(max_length=255)
