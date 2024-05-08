@@ -207,11 +207,14 @@ def team_search(request):
 def apex_general_chat(request):
     return render(request, 'chat/room2.html', {'room_name': 'apex_general_chat'})
 
+def apex_team_search(request):
+    return render(request, 'chat/apex_team_search.html')
+
 def apex_trade(request):
     return render(request, 'chat/apex_trade.html')
 
-def apex_team_search(request):
-    return render(request, 'chat/apex_team_search.html')
+#def apex_tournament(request):
+#    return render(request, 'chat/tour.html')
 ##########################################################################
 
 
@@ -220,6 +223,12 @@ def cs2_general_chat(request):
 
 def cs2_team_search(request):
     return render(request, 'chat/cs2_team_search.html')
+
+def cs2_trade(request):
+    return render(request, 'chat/cs2_trade.html')
+
+#def cs2_tournament(request):
+#    return render(request, 'chat/tour.html')
 
 ##########################################################################
 
@@ -230,6 +239,11 @@ def lol_general_chat(request):
 def lol_team_search(request):
     return render(request, 'chat/lol_team_search.html')
 
+def lol_trade(request):
+    return render(request, 'chat/lol_trade.html')
+
+#def lol_tournament(request):
+#    return render(request, 'chat/tour.html')
 ##########################################################################
 
 
@@ -238,3 +252,9 @@ def valorant_general_chat(request):
 
 def valorant_team_search(request):
     return render(request, 'chat/valorant_team_search.html')
+
+def valorant_trade(request):
+   return render(request, 'chat/valorant_trade.html')
+
+#def valorant_tournament(request):
+#    return render(request, 'chat/tour.html')

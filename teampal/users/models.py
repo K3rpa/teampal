@@ -44,14 +44,8 @@ class FriendRequest(models.Model):
     def __str__(self):
         return f"{self.from_user.username} -> {self.to_user.username}"
 
-class Team(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    game = models.CharField(max_length=100)
-    members_needed = models.IntegerField()
-    contact = models.CharField(max_length=100)
-    creator = models.CharField(max_length=255, null=True, blank=True)
 
+############################################################################################################
 class Apex_Team(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -59,6 +53,31 @@ class Apex_Team(models.Model):
     members_needed = models.IntegerField()
     contact = models.CharField(max_length=100)
     creator = models.CharField(max_length=255, null=True, blank=True)
+
+class apex_Trade(models.Model):
+    game_name = models.CharField(max_length=255)
+    item_name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    status = models.CharField(max_length=3, choices=[('WTB', 'Want to Buy'), ('WTS', 'Want to Sell')])
+    quantity = models.IntegerField()
+    expected_price = models.FloatField()
+    current_offer = models.FloatField()
+    current_quantity = models.IntegerField(default=0)
+    creator = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.item_name} ({self.status})"
+
+class apex_Offer(models.Model):
+    trade = models.ForeignKey(apex_Trade, on_delete=models.CASCADE, related_name='offers')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    offer_price = models.FloatField()
+    offer_quantity = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+############################################################################################################
 
 class cs2_Team(models.Model):
     name = models.CharField(max_length=255)
@@ -68,6 +87,31 @@ class cs2_Team(models.Model):
     contact = models.CharField(max_length=100)
     creator = models.CharField(max_length=255, null=True, blank=True)
 
+class cs2_Trade(models.Model):
+    game_name = models.CharField(max_length=255)
+    item_name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    status = models.CharField(max_length=3, choices=[('WTB', 'Want to Buy'), ('WTS', 'Want to Sell')])
+    quantity = models.IntegerField()
+    expected_price = models.FloatField()
+    current_offer = models.FloatField()
+    current_quantity = models.IntegerField(default=0)
+    creator = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.item_name} ({self.status})"
+
+class cs2_Offer(models.Model):
+    trade = models.ForeignKey(cs2_Trade, on_delete=models.CASCADE, related_name='offers')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    offer_price = models.FloatField()
+    offer_quantity = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+############################################################################################################
+
 class lol_Team(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -76,7 +120,64 @@ class lol_Team(models.Model):
     contact = models.CharField(max_length=100)
     creator = models.CharField(max_length=255, null=True, blank=True)
 
+class lol_Trade(models.Model):
+    game_name = models.CharField(max_length=255)
+    item_name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    status = models.CharField(max_length=3, choices=[('WTB', 'Want to Buy'), ('WTS', 'Want to Sell')])
+    quantity = models.IntegerField()
+    expected_price = models.FloatField()
+    current_offer = models.FloatField()
+    current_quantity = models.IntegerField(default=0)
+    creator = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.item_name} ({self.status})"
+
+class lol_Offer(models.Model):
+    trade = models.ForeignKey(lol_Trade, on_delete=models.CASCADE, related_name='offers')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    offer_price = models.FloatField()
+    offer_quantity = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+############################################################################################################
 class valorant_Team(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    game = models.CharField(max_length=100)
+    members_needed = models.IntegerField()
+    contact = models.CharField(max_length=100)
+    creator = models.CharField(max_length=255, null=True, blank=True)
+
+class valorant_Trade(models.Model):
+    game_name = models.CharField(max_length=255)
+    item_name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    status = models.CharField(max_length=3, choices=[('WTB', 'Want to Buy'), ('WTS', 'Want to Sell')])
+    quantity = models.IntegerField()
+    expected_price = models.FloatField()
+    current_offer = models.FloatField()
+    current_quantity = models.IntegerField(default=0)
+    creator = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f"{self.item_name} ({self.status})"
+
+class valorant_Offer(models.Model):
+    trade = models.ForeignKey(valorant_Trade, on_delete=models.CASCADE, related_name='offers')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    offer_price = models.FloatField()
+    offer_quantity = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+############################################################################################################
+
+class Team(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     game = models.CharField(max_length=100)
@@ -95,7 +196,6 @@ class Trade(models.Model):
     current_quantity = models.IntegerField(default=0)
     creator = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     
-
     def __str__(self):
         return f"{self.item_name} ({self.status})"
 

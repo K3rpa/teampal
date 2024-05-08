@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Trade Search</title>
+    <style>
+        .info-box {
+            width: 300px;
+            height: 350px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            position: relative;
+            padding: 20px;
+            background-color: #f9f9f9;
+
+        }
+        .offer-button, .history-button, .create-button, .cancel-button, .filter-button {
+            padding: 10px 20px;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .offer-button {
+            background-color: #008CBA;
+            position: absolute;
+            bottom: 60px;
+            left: 10px;
+        }
+        .history-button {
+            background-color: #6a5acd;
+            position: absolute;
+            bottom: 30px;
+            left: 10px;
+        }
+        .cancel-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #f44336;
+        }
+        .create-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+        }
+        .filter-button {
+            background-color: #4CAF50;
+        }
+        #filter-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="filter-container">
+        <input type="text" id="filter-input" placeholder="Search by Item Name or Game">
+        <button class="filter-button" onclick="filterTrades()">Filter</button>
+        <!--<button onclick="fetchTrades()">Refresh Trades</button>-->
+    </div>
+    <div id="info-container"></div>
+    <button class="create-button" onclick="createTrade()">Create Trade</button>
+    <div id="historyModal" style="display:none; position:fixed; z-index:1; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgb(0,0,0,0.4);">
+        <div style="background-color:#fefefe; margin:25% auto; padding:20px; border:1px solid #888; width:50%; max-width:600px;">
+            <span onclick="closeHistoryModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
+            <h2>Offer History</h2>
+            <div id="offers-container" style="max-height:300px; overflow-y:auto;">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var currentUserEmail = '{{ user.email }}'; 
+        const container = document.getElementById('info-container');
+        let trades = [];
+        let websocket = new WebSocket('ws://localhost:8000/ws/apex_trade_search/');
+        websocket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+        websocket.onerror = function(event) {
+            console.error('WebSocket error observed:', event);
+        };
+        websocket.onmessage = function(event) {
+            console.log("Message received:", event.data);
+            const data = JSON.parse(event.data);
+            console.log("Parsed data:", data);
+            if (data.type === 'all_trades') {
+                trades = data.trades;
+                displayTrades(trades);
+            } else if (data.type === 'trade.message') {
+                console.log("New trade received:", data.trade);
+                trades.push(data.trade);
+                displayTrades(trades);
+            }
+            else if (data.type === 'trade_offers') {
+                console.log("Offers received:", data.offers);
+                updateOffersDisplay(data.offers);
+            }
+            else if (data.type === 'trade.update') {
+                updateTradeDisplay(data);
+            }
+        };
+
+        function displayTrades(filteredTrades) {
+            container.innerHTML = '';
+            filteredTrades.forEach((trade, index) => {
+                const infoBox = document.createElement('div');
+                infoBox.className = 'info-box';
+                infoBox.innerHTML = `
+                    <h3>Item: ${trade.item_name}</h3>
+                    <p>Description: ${trade.description}</p>
+                    <p>Server: ${trade.game_name}</p>
+                    <p>Status: ${trade.status}</p>
+                    <p>Quantity: ${trade.quantity}</p>
+                    <p>Expected Price: ${trade.expected_price}</p>
+                    <button class="offer-button" onclick="makeOffer('${trade.item_name}')">Make Offer</button>
+                    <button class="history-button" onclick="fetchHistory(${trade.id})">Check History</button>
+                    ${trade.creator__email && trade.creator__email === currentUserEmail ? `<button class="cancel-button" onclick="cancelTrade(${index})">Cancel</button>` : ''}
+                `;
+                container.appendChild(infoBox);
+            });
+        }
+        function fetchHistory(tradeId) {
+            console.log("Fetching history for trade:", tradeId);
+            websocket.send(JSON.stringify({type: "fetch_offers", trade_id: tradeId}));
+        }
+        function filterTrades() {
+            const filterValue = document.getElementById('filter-input').value.toLowerCase();
+            const filteredTrades = trades.filter(trade => 
+                trade.item_name.toLowerCase().includes(filterValue) ||
+                trade.game_name.toLowerCase().includes(filterValue));
+            displayTrades(filteredTrades);
+        }
+        function createTrade() {
+            const gameName = prompt("Enter the Server name:");
+            const itemName = prompt("Enter the item name:");
+            const description = prompt("Enter a description:");
+            const status = prompt("Enter status (WTB or WTS):");
+            const quantity = parseInt(prompt("Enter the quantity:"), 10);
+            const expectedPrice = parseFloat(prompt("Enter the expected price(total):"));
+            console.log("Data to send:", gameName, itemName, description, status, quantity, expectedPrice);
+            if (gameName && itemName && description && status && quantity && expectedPrice) {
+                const tradeData = {
+                    type: "create_trade",
+                    game_name: gameName,
+                    item_name: itemName,
+                    description: description,
+                    status: status,
+                    quantity: quantity,
+                    expected_price: expectedPrice,
+                    creator: currentUserEmail,
+                    user_email: currentUserEmail
+                };
+                websocket.send(JSON.stringify(tradeData));
+            } else {
+                alert("All fields must be filled out correctly.");
+            }       
+        }
+        function cancelTrade(index) {
+            const tradeId = trades[index].id;
+            console.log("Cancelling trade with ID:", tradeId);
+            websocket.send(JSON.stringify({ type: "cancel_trade", id: tradeId }));
+            trades.splice(index, 1);
+            displayTrades(trades);
+        }
+        function fetchTrades() {
+            console.log("Fetching trades");
+            websocket.send(JSON.stringify({type: "fetch_trades"}));
+        }
+
+        function updateOffersDisplay(offers) {
+            console.log("Updating offers display with:", offers);
+            const offersContainer = document.getElementById('offers-container');
+            offersContainer.innerHTML = '';
+
+            offers.forEach(offer => {
+                const offerDiv = document.createElement('div');
+                offerDiv.className = 'offer';
+                offerDiv.innerHTML = `
+                    <p>User: ${offer.user_username}</p>
+                    <p>Price: ${offer.offer_price}</p>
+                    <p>Quantity: ${offer.offer_quantity}</p>
+                `;
+                offersContainer.appendChild(offerDiv);
+            });
+
+            if (offers.length === 0) {
+                offersContainer.innerHTML = '<p>No offers available.</p>';
+            }
+            showHistoryModal(); 
+        }
+        function showHistoryModal() {
+            document.getElementById('historyModal').style.display = "block";
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').style.display = "none";
+        }
+
+        function makeOffer(itemName) {
+            const offerPrice = parseFloat(prompt("Enter your offer price:"));
+            const offerQuantity = parseInt(prompt("Enter your offer quantity:"), 10);
+            if (!isNaN(offerPrice) && !isNaN(offerQuantity)) {
+                websocket.send(JSON.stringify({
+                    type: "make_offer",
+                    item_name: itemName,
+                    offer_price: offerPrice,
+                    offer_quantity: offerQuantity,
+                    user_email: currentUserEmail
+                }));
+            } else {
+                alert("Invalid input. Please enter valid numbers.");
+            }
+        }      
+        
+        function updateTradeDisplay(data) {
+            const currentOfferElement = document.getElementById(`offer-${data.trade_id}`);
+            const currentQuantityElement = document.getElementById(`quantity-${data.trade_id}`);
+            if (currentOfferElement && currentQuantityElement) {
+                currentOfferElement.textContent = data.current_offer;
+                currentQuantityElement.textContent = data.current_quantity;
+            }
+        }
+    </script>
+</body>
+</html>

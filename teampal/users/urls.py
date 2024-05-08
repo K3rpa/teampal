@@ -27,23 +27,27 @@ urlpatterns = [
     #----------------dashboard---------------------------------
     path('apex/apex_general_chat/', views.apex_general_chat, name='apex.apex_general_chat'),
     path('apex/team_search/', views.apex_team_search, name='apex.team_search'),
-    path('dashboard/trade/', views.trade, name='dashboard.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    path('apex/trade/', views.apex_trade, name='apex.trade'),
+    #path('apex/tournament/', views.apex_tournament, name='apex.tournament'),
     #-----------------apex end---------------------------------
     path('cs2/cs2_general_chat/', views.cs2_general_chat, name='cs2_general_chat'),
     path('cs2/team_search/', views.cs2_team_search, name='cs2.team_search'),
-    path('dashboard/trade/', views.trade, name='dashboard.trade'),
+    path('cs2/trade/', views.cs2_trade, name='cs2.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    #path('cs2/tournament/', views.cs2_tournament, name='cs2.tournament'),
     #------------------cs2 end----------------------------------    
     path('lol/lol_general_chat/', views.lol_general_chat, name='lol_general_chat'),
     path('lol/team_search/', views.lol_team_search, name='lol.team_search'),
-    path('dashboard/trade/', views.trade, name='dashboard.trade'),
+    path('lol/trade/', views.lol_trade, name='lol.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+    #path('lol/tournament/', views.lol_tournament, name='lol.tournament'),
     #-------------------lol end-----------------------------------
     path('valorant/valorant_general_chat/', views.valorant_general_chat, name='valorant_general_chat'),
     path('valorant/team_search/', views.valorant_team_search, name='valorant.team_search'),
-    path('dashboard/trade/', views.trade, name='dashboard.trade'),
+    path('valorant/trade/', views.valorant_trade, name='valorant.trade'),
     path('dashboard/tournament/', views.tournament, name='dashboard.tournament'),
+   # path('valorant/tournament/', views.valorant_tournament, name='valorant.tournament'),
     #-------------------valorant end------------------------------
 
 
