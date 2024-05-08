@@ -76,7 +76,7 @@
         const container = document.getElementById('info-container');
         let tournaments = [];
     
-        let websocket = new WebSocket('ws://localhost:8000/ws/tournaments/');
+        let websocket = new WebSocket('ws://localhost:8000/ws/valorant_tournaments/');
         websocket.onopen = function() {
             console.log('WebSocket connection established');
         };
@@ -111,7 +111,7 @@
                 infoBox.className = 'info-box';
                 infoBox.innerHTML = `
                     <h3>${tournament.name}</h3>
-                    <p>Game: ${tournament.game}</p>
+                    <p>Location: ${tournament.game}</p>
                     <p>Date: ${tournament.date}</p>
                     <p>Description: ${tournament.description}</p>
                     <p>Teams: ${tournament.team_count}</p>
@@ -142,9 +142,9 @@
 
     
         function createTournament() {
-            const tournamentName = prompt("Enter tournament name:");
+            const tournamentName = prompt("Enter tournament Name:");
             const description = prompt("Enter tournament description:");
-            const game = prompt("Enter game:");
+            const game = prompt("Enter Location:");
             const date = prompt("Enter date (YYYY-MM-DD):");
             const teamCount = prompt("Enter number of teams:");
             const prize = prompt("Enter prize:");
@@ -215,7 +215,7 @@
                 alert('The provided link is not a valid URL.');
             }
         }
-
+        
     </script>
     
 </body>

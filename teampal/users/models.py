@@ -77,6 +77,30 @@ class apex_Offer(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+
+
+class apex_TournamentPost(models.Model):
+    name = models.CharField(max_length=255)
+    game = models.CharField(max_length=255, null=True)
+    date = models.DateField()
+    description = models.TextField()
+    team_count = models.IntegerField()
+    prize = models.CharField(max_length=100)
+    interest_count = models.IntegerField(default=0)
+    website = models.URLField(blank=True, null=True)
+    contact = models.CharField(max_length=255)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+class apex_TournamentInterest(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    tournament = models.ForeignKey(apex_TournamentPost, on_delete=models.CASCADE)
+    is_interested = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('user', 'tournament')
 ############################################################################################################
 
 class cs2_Team(models.Model):
@@ -110,6 +134,29 @@ class cs2_Offer(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+
+class cs2_TournamentPost(models.Model):
+    name = models.CharField(max_length=255)
+    game = models.CharField(max_length=255, null=True)
+    date = models.DateField()
+    description = models.TextField()
+    team_count = models.IntegerField()
+    prize = models.CharField(max_length=100)
+    interest_count = models.IntegerField(default=0)
+    website = models.URLField(blank=True, null=True)
+    contact = models.CharField(max_length=255)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+class cs2_TournamentInterest(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    tournament = models.ForeignKey(cs2_TournamentPost, on_delete=models.CASCADE)
+    is_interested = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('user', 'tournament')
 ############################################################################################################
 
 class lol_Team(models.Model):
@@ -143,6 +190,29 @@ class lol_Offer(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+
+class lol_TournamentPost(models.Model):
+    name = models.CharField(max_length=255)
+    game = models.CharField(max_length=255, null=True)
+    date = models.DateField()
+    description = models.TextField()
+    team_count = models.IntegerField()
+    prize = models.CharField(max_length=100)
+    interest_count = models.IntegerField(default=0)
+    website = models.URLField(blank=True, null=True)
+    contact = models.CharField(max_length=255)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+class lol_TournamentInterest(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    tournament = models.ForeignKey(lol_TournamentPost, on_delete=models.CASCADE)
+    is_interested = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('user', 'tournament')
 ############################################################################################################
 class valorant_Team(models.Model):
     name = models.CharField(max_length=255)
@@ -175,6 +245,29 @@ class valorant_Offer(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.offer_price} for {self.offer_quantity}"
+
+class valorant_TournamentPost(models.Model):
+    name = models.CharField(max_length=255)
+    game = models.CharField(max_length=255, null=True)
+    date = models.DateField()
+    description = models.TextField()
+    team_count = models.IntegerField()
+    prize = models.CharField(max_length=100)
+    interest_count = models.IntegerField(default=0)
+    website = models.URLField(blank=True, null=True)
+    contact = models.CharField(max_length=255)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+class valorant_TournamentInterest(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    tournament = models.ForeignKey(valorant_TournamentPost, on_delete=models.CASCADE)
+    is_interested = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('user', 'tournament')
 ############################################################################################################
 
 class Team(models.Model):

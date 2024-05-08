@@ -213,8 +213,8 @@ def apex_team_search(request):
 def apex_trade(request):
     return render(request, 'chat/apex_trade.html')
 
-#def apex_tournament(request):
-#    return render(request, 'chat/tour.html')
+def apex_tournament(request):
+    return render(request, 'chat/apex_tour.html')
 ##########################################################################
 
 
@@ -227,8 +227,8 @@ def cs2_team_search(request):
 def cs2_trade(request):
     return render(request, 'chat/cs2_trade.html')
 
-#def cs2_tournament(request):
-#    return render(request, 'chat/tour.html')
+def cs2_tournament(request):
+    return render(request, 'chat/cs2_tour.html')
 
 ##########################################################################
 
@@ -242,8 +242,8 @@ def lol_team_search(request):
 def lol_trade(request):
     return render(request, 'chat/lol_trade.html')
 
-#def lol_tournament(request):
-#    return render(request, 'chat/tour.html')
+def lol_tournament(request):
+    return render(request, 'chat/lol_tour.html')
 ##########################################################################
 
 
@@ -256,5 +256,5 @@ def valorant_team_search(request):
 def valorant_trade(request):
    return render(request, 'chat/valorant_trade.html')
 
-#def valorant_tournament(request):
-#    return render(request, 'chat/tour.html')
+def valorant_tournament(request):
+    return render(request, 'chat/valorant_tour.html')

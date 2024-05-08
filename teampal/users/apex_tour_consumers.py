@@ -4,7 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 import json
 from django.core.exceptions import ObjectDoesNotExist
-from .models import TournamentInterest, TournamentPost
+from .models import apex_TournamentInterest, apex_TournamentPost
 import logging
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F
@@ -13,9 +13,9 @@ from django.db.models import F
 
 logger = logging.getLogger(__name__)
 
-class TourConsumer(AsyncWebsocketConsumer):
+class apex_TourConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.room_group_name = "tournament_search"
+        self.room_group_name = "apex_tournament_search"
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
         logger.info(f"WebSocket connected")
@@ -26,7 +26,7 @@ class TourConsumer(AsyncWebsocketConsumer):
     def get_tournaments(self):
         User = get_user_model()
 
-        tournaments = TournamentPost.objects.annotate(creator_email=F('creator__email')).values(
+        tournaments = apex_TournamentPost.objects.annotate(creator_email=F('creator__email')).values(
         'name', 'game', 'date', 'description', 'team_count', 'prize', 
         'interest_count', 'website', 'contact', 'creator_email')
         return json.dumps(list(tournaments), cls=DjangoJSONEncoder)
@@ -61,7 +61,7 @@ class TourConsumer(AsyncWebsocketConsumer):
 
         try:
             logger.info(f"Attempting to create tournament with data: {data}")
-            tournament = await database_sync_to_async(TournamentPost.objects.create)(
+            tournament = await database_sync_to_async(apex_TournamentPost.objects.create)(
                 name=data['name'],
                 game=data['game'],
                 date=data['date'],
@@ -94,10 +94,10 @@ class TourConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def cancel_tournament(self, name):
         try:
-            tournament = TournamentPost.objects.get(name=name)
+            tournament = apex_TournamentPost.objects.get(name=name)
             tournament.delete()
             logger.info(f"Tournament {name} cancelled successfully.")
-        except TournamentPost.DoesNotExist:
+        except apex_TournamentPost.DoesNotExist:
             logger.error(f"Tournament with name {name} does not exist.")
         except Exception as e:
             logger.error(f"Error when trying to cancel tournament {name}: {e}")
@@ -107,8 +107,8 @@ class TourConsumer(AsyncWebsocketConsumer):
         User = get_user_model()
         try:
             user = User.objects.get(email=user_email)
-            tournament = TournamentPost.objects.get(name=tournament_name)
-            obj, created = TournamentInterest.objects.get_or_create(
+            tournament = apex_TournamentPost.objects.get(name=tournament_name)
+            obj, created = apex_TournamentInterest.objects.get_or_create(
                 user=user,
                 tournament=tournament,
                 defaults={'is_interested': True}
@@ -117,7 +117,7 @@ class TourConsumer(AsyncWebsocketConsumer):
                 obj.is_interested = not obj.is_interested
                 obj.save()
 
-            current_interest_count = TournamentInterest.objects.filter(
+            current_interest_count = apex_TournamentInterest.objects.filter(
                 tournament=tournament, is_interested=True).count()
             tournament.interest_count = current_interest_count
             tournament.save(update_fields=['interest_count'])
@@ -125,7 +125,7 @@ class TourConsumer(AsyncWebsocketConsumer):
         except User.DoesNotExist:
             logger.error(f"No user found with email {user_email}.")
             return None
-        except TournamentPost.DoesNotExist:
+        except apex_TournamentPost.DoesNotExist:
             logger.error(f"Tournament with name {tournament_name} does not exist.")
             return None
         except Exception as e:
